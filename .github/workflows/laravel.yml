@@ -1,4 +1,4 @@
-name: Laravel
+name: Pipeline
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  laravel-tests:
+  Feature-and-Unit-Tests:
 
     runs-on: ubuntu-latest
 
