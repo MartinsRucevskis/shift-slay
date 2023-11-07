@@ -27,7 +27,7 @@ jobs:
       continue-on-error: true
 
 
-  Laravel Pint(CS-fixer):
+  Laravel-Pint(CS-fixer):
 
     runs-on: ubuntu-latest
 
