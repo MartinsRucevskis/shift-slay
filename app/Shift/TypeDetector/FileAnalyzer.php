@@ -18,7 +18,7 @@ class FileAnalyzer
             $alias = $import[3] ?? end($splitClassName);
             $uses[$alias] = $className;
         }
+
         return $uses;
     }
-
 }

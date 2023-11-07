@@ -3,11 +3,11 @@
 namespace App\Shift\Objects;
 
 use PhpParser\Node\Param;
-use PhpParser\Node\Stmt\Property;
 
 class MethodParam
 {
     public ?string $type;
+
     public string $name;
 
     public function __construct(Param $property)
@@ -26,5 +26,4 @@ class MethodParam
         }
         $this->type = $name;
     }
-
 }

@@ -12,7 +12,9 @@ use App\Shift\TypeDetector\TypeDetector;
 class FixMethod
 {
     private array $tokens;
+
     private TokenTraverser $tokenTraverse;
+
     /**
      * @var array[]
      */
@@ -31,15 +33,17 @@ class FixMethod
             return in_array($use, array_keys($needReplacing[0]));
         });
         preg_match('/.*?function.*?\(.*?\):? ?(.*?)[\s+]?{(.*)}/ms', $this->methodBody($method), $matches);
-        $this->tokens = $this->removePhpTags($this->chopTokens(token_get_all('<?php' . $matches[2] . '?>')));
+        $this->tokens = $this->removePhpTags($this->chopTokens(token_get_all('<?php'.$matches[2].'?>')));
         $originalTokens = $this->tokens;
         $this->tokenTraverse = new TokenTraverser($this->tokens);
         $this->availableVariables = array_reduce($method->params, function ($carry, $methodParam) {
             $carry[$methodParam->name] = $methodParam->type;
+
             return $carry;
         }, []);
         $this->availableVariables = array_merge($this->availableVariables, array_reduce($this->class->availableVariables(true), function ($carry, $methodParam) {
             $carry[$methodParam->name] = $methodParam->type;
+
             return $carry;
         }, []));
         for ($i = 0; $i < count($this->tokens); $i++) {
@@ -49,7 +53,7 @@ class FixMethod
 
         }
         $this->class->fileContents = str_replace(str_replace("\r\n", "\n", implode(null, $originalTokens)), implode(null, $this->tokens), $this->class->fileContents);
-        $this->class->fileContents = str_replace("\r", "", $this->class->fileContents);
+        $this->class->fileContents = str_replace("\r", '', $this->class->fileContents);
         file_put_contents($this->class->fileLocation, $this->class->fileContents);
     }
 
@@ -69,7 +73,7 @@ class FixMethod
             $i = $logicalLineEnding;
         }
         $this->class->fileContents = str_replace(str_replace("\r\n", "\n", implode(null, $originalTokens)), implode(null, $this->tokens), $this->class->fileContents);
-        $this->class->fileContents = str_replace("\r", "", $this->class->fileContents);
+        $this->class->fileContents = str_replace("\r", '', $this->class->fileContents);
         file_put_contents($this->class->fileLocation, $this->class->fileContents);
     }
 
@@ -90,7 +94,7 @@ class FixMethod
         $start = $isDeclaring ? $start + 3 : $start;
         $currentType = 'self';
         $declaresObject = $this->tokens[$start] === '(';
-        $start = $declaresObject ? $start+1 : $start;
+        $start = $declaresObject ? $start + 1 : $start;
         for ($i = $start; $i < $end; $i++) {
             if ($this->tokens[$i] === '$this') {
                 $currentType = 'self';
@@ -105,7 +109,7 @@ class FixMethod
                 }
                 if ($this->tokenTraverse->isVariable($i)) {
                     $currentType = $this->class->variableType($this->tokens[$i]);
-                    if (!in_array($currentType, ['void', 'string', 'int', 'array', 'null', ''])) {
+                    if (! in_array($currentType, ['void', 'string', 'int', 'array', 'null', ''])) {
                         $currentType = $this->class->uses[$currentType];
                     }
 
@@ -113,8 +117,8 @@ class FixMethod
                     if ($currentType === 'self') {
                         $currentType = $this->class->methodReturnType($this->tokens[$i]);
 
-                    } elseif(!in_array($currentType, ['void', 'string', 'int', 'array', 'null', ''])) {
-                        if (!str_contains($currentType, '\\')) {
+                    } elseif (! in_array($currentType, ['void', 'string', 'int', 'array', 'null', ''])) {
+                        if (! str_contains($currentType, '\\')) {
                             $currentType = $this->class->uses[$currentType];
                         }
                         $currentType = (new TypeDetector())->methodReturnType($currentType, $this->tokens[$i]);
@@ -145,13 +149,13 @@ class FixMethod
                 $currentType = $this->class->uses[$this->tokens[$i]];
 
             } elseif (in_array($this->tokens[$i], array_keys(CommonUpdates::commonChanges()['helpers']))) {
-                foreach ($this->tokenTraverse->getParams($i) as $param){
+                foreach ($this->tokenTraverse->getParams($i) as $param) {
 
-                    if (isset(CommonUpdates::commonChanges()['helpers'][$this->tokens[$i]]['params'][implode('', $param)])){
+                    if (isset(CommonUpdates::commonChanges()['helpers'][$this->tokens[$i]]['params'][implode('', $param)])) {
                         // TODO: use tokens for replacement or just *file-up-to-this-point*->'replace function call and params with regex'
-//                        $change = CommonUpdates::commonChanges()['helpers'][$this->tokens[$i]]['params'][implode('', $param)];
-/*                        $tokenized = $this->removePhpTags($this->chopTokens(token_get_all('<?php ' . $change . '?>')));*/
-//                        array_splice($this->tokens, $)
+                        //                        $change = CommonUpdates::commonChanges()['helpers'][$this->tokens[$i]]['params'][implode('', $param)];
+                        /*                        $tokenized = $this->removePhpTags($this->chopTokens(token_get_all('<?php ' . $change . '?>')));*/
+                        //                        array_splice($this->tokens, $)
                     }
                 }
             }
@@ -159,16 +163,17 @@ class FixMethod
         if ($isDeclaring) {
             $this->availableVariables[$declaringVariable] = $currentType;
         }
+
         return $currentType ?? 'self';
     }
-
 
     private function methodBody(ClassMethod $method): string
     {
         $source = preg_split('/\n/', $this->class->fileContents);
         $body = [];
-        for ($i = $method->startLine - 1; $i < $method->endLine; $i++)
+        for ($i = $method->startLine - 1; $i < $method->endLine; $i++) {
             $body[] = "{$source[$i]}";
+        }
 
         return implode(PHP_EOL, $body);
     }
@@ -177,6 +182,7 @@ class FixMethod
     {
         array_pop($tokens);
         unset($tokens[0]);
+
         return array_values($tokens);
     }
 
@@ -190,6 +196,7 @@ class FixMethod
                 $tokenArray[] = $token;
             }
         }
+
         return $tokenArray;
     }
 }

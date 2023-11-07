@@ -2,50 +2,43 @@
 
 namespace App\Shift\Shifter;
 
-use Illuminate\Http\Request;
-
 class PackageUpdates
 {
-
     public static function methodChanges(): array
     {
         $command = config('shift.command_name');
         $command = explode(':', $command);
         $command = $command[1];
+
         return match ($command) {
             'Lumen8ToLaravel8' => [
                 'Tests\Feature\FixProject\Resources\TestProject\vendor\SlayPackage\SlayPackage' => [
                     'methods' => [
-                        'someFunction' => 'someNewFunction'
-                    ]
+                        'someFunction' => 'someNewFunction',
+                    ],
                 ],
                 'Tests\Feature\FixProject\Resources\TestProject\vendor\SlayPackage\Support' => [
                     'methods' => [
-                        'randomString' => 'randomStringNew'
-                    ]
+                        'randomString' => 'randomStringNew',
+                    ],
                 ],
                 'Laravel\Lumen\Routing\Controller' => [
-                    'replaceWith' =>
-                        'Illuminate\Routing\Controller'
+                    'replaceWith' => 'Illuminate\Routing\Controller',
                 ],
                 'Laravel\Lumen\Exceptions\Handler' => [
-                    'replaceWith' =>
-                        'Illuminate\Foundation\Exceptions\Handler'
+                    'replaceWith' => 'Illuminate\Foundation\Exceptions\Handler',
 
                 ],
                 'Pearl\RequestValidate\RequestAbstract' => [
-                    'replaceWith' =>
-                        'Illuminate\Foundation\Http\FormRequest'
+                    'replaceWith' => 'Illuminate\Foundation\Http\FormRequest',
 
                 ],
                 'Dingo\Api\Provider\LumenServiceProvider' => [
-                    'replaceWith' =>
-                        'Dingo\Api\Provider\LaravelServiceProvider'
+                    'replaceWith' => 'Dingo\Api\Provider\LaravelServiceProvider',
 
                 ],
                 'Laravel\Lumen\Console\Kernel' => [
-                    'replaceWith' =>
-                        'Illuminate\Foundation\Console\Kernel'
+                    'replaceWith' => 'Illuminate\Foundation\Console\Kernel',
                 ],
             ],
             default => [

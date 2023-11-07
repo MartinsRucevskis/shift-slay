@@ -6,15 +6,13 @@ use Tests\Feature\FixProject\Resources\TestProject\vendor\SlayPackage\SlayPackag
 
 class TestController extends Controller
 {
-
     public function endpoint(): void
     {
         $supportPackage = $this->variable->someFunction();
         $randomVariable = new SlayPackage($this->testString(
             $this->additionalString(),
-            function () use ($supportPackage){
-                return fn() =>
-                $this
+            function () use ($supportPackage) {
+                return fn () => $this
                     ->additionalString().
                     $supportPackage
                         ->randomString();
@@ -24,6 +22,6 @@ class TestController extends Controller
 
     private function testString(string $additionalString, callable $testCallback): string
     {
-        return 'randomString' . $additionalString;
+        return 'randomString'.$additionalString;
     }
 }

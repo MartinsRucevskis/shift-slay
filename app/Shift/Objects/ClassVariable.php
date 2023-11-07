@@ -9,9 +9,13 @@ use PhpParser\Node\Stmt\Property;
 class ClassVariable
 {
     public ?string $type;
+
     public string $class;
+
     public string $name;
+
     public string $visibility;
+
     public string $className;
 
     public function __construct(Property $property, string $className, string $fileContents)
@@ -21,6 +25,7 @@ class ClassVariable
         $this->visibility = $this->visibility($property);
         $this->type = $property->type ?? $this->typeFromDocBlock($fileContents);
     }
+
     private function visibility(Property|ClassMethod $instance): string
     {
         $visibility = VisibilityEnum::PRIVATE;
@@ -33,15 +38,15 @@ class ClassVariable
         return $visibility;
     }
 
-    private function typeFromDocBlock(string $fileContents): ?string {
-        if(preg_match('#^\h*/\*\*(?:\R\h*\*.*)*\R\h*\*/\R(?=.*\b'.preg_quote($this->visibility).'\s+(static\s+)?\$'.preg_quote($this->name).'\b)#m', $fileContents, $docBlock)) {
+    private function typeFromDocBlock(string $fileContents): ?string
+    {
+        if (preg_match('#^\h*/\*\*(?:\R\h*\*.*)*\R\h*\*/\R(?=.*\b'.preg_quote($this->visibility).'\s+(static\s+)?\$'.preg_quote($this->name).'\b)#m', $fileContents, $docBlock)) {
             preg_match('/@var\s+?(.+)\n/m', $docBlock[0], $varType);
         }
-        if(isset($varType[1]) && $varType[1][0] === '\\'){
+        if (isset($varType[1]) && $varType[1][0] === '\\') {
             $varType[1] = mb_substr($varType[1], 1);
         }
 
         return $varType[1] ?? '';
     }
-
 }

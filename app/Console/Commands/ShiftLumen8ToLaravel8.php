@@ -2,8 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Shift\FileMover\FixFile;
-use App\Shift\Objects\FileClass;
 use App\Shift\Shift;
 use Illuminate\Console\Command;
 
@@ -28,7 +26,7 @@ class ShiftLumen8ToLaravel8 extends Command
      */
     public function handle()
     {
-        echo('I\'m starting to shift, SLAYYY!'.PHP_EOL);
+        echo 'I\'m starting to shift, SLAYYY!'.PHP_EOL;
         config(['shift.command_name' => 'shift:Lumen8ToLaravel8']);
         (new Shift())->run(config('shift.project_path'));
     }

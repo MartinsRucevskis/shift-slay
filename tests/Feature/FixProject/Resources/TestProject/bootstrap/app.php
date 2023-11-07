@@ -1,6 +1,6 @@
 <?php
 
-$codeCoverageRemote = __DIR__ . '/../c3.php';
+$codeCoverageRemote = __DIR__.'/../c3.php';
 if (file_exists($codeCoverageRemote)) {
     include $codeCoverageRemote;
 }

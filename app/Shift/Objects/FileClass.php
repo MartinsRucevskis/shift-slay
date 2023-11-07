@@ -1,33 +1,34 @@
 <?php
 
 namespace App\Shift\Objects;
+
 use App\Shift\Enums\VisibilityEnum;
 use App\Shift\TypeDetector\FileAnalyzer;
-use PhpParser\Error;
+use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Property;
-use PhpParser\NodeTraverser;
-use PhpParser\NodeVisitorAbstract;
-use PhpParser\Node;
-use PhpParser\Node\Stmt;
-use PhpParser\NodeVisitor\ParentConnectingVisitor;
 use PhpParser\ParserFactory;
-use PhpParser\PrettyPrinter;
 
 class FileClass
 {
     public ?string $namespace;
+
     public ?string $className = null;
+
     public ?self $parent = null;
+
     public ?array $uses;
+
     public string $fileContents;
-    public string $fileLocation ='';
+
+    public string $fileLocation = '';
+
     /**
      * @var \App\Shift\Objects\ClassMethod[]|null
      */
     public array $methods = [];
+
     /**
      * @var ClassVariable[]|null
      */
@@ -60,7 +61,7 @@ class FileClass
     public function availableMethods(bool $includePrivate = true): array
     {
         $availableMethods = $this->methods;
-        if (!$includePrivate) {
+        if (! $includePrivate) {
             $availableMethods = array_filter($availableMethods, function (\App\Shift\Objects\ClassMethod $availableMethod) {
                 return $availableMethod->visibility !== VisibilityEnum::PRIVATE;
             });
@@ -68,13 +69,14 @@ class FileClass
         if (isset($this->parent)) {
             $availableMethods = array_merge($availableMethods, $this->parent->availableMethods(false));
         }
+
         return $availableMethods;
     }
 
     public function availableVariables(bool $includePrivate): ?array
     {
         $availableVariables = $this->properties;
-        if (!$includePrivate) {
+        if (! $includePrivate) {
             $availableVariables = array_filter($availableVariables, function (ClassVariable $availableVariable) {
                 return $availableVariable->visibility !== VisibilityEnum::PRIVATE;
             });
@@ -82,18 +84,22 @@ class FileClass
         if (isset($this->parent)) {
             $availableVariables = array_merge($availableVariables, $this->parent->availableVariables(false));
         }
+
         return $availableVariables;
     }
 
-    public function variableType(string $variableName): string{
-        $type = array_filter($this->availableVariables(true), function ($variable) use ($variableName){
+    public function variableType(string $variableName): string
+    {
+        $type = array_filter($this->availableVariables(true), function ($variable) use ($variableName) {
             return $variable->name === $variableName;
         });
+
         return $type[0]?->type ?? '';
     }
 
-    public function methodReturnType(string $methodName): string{
-        $method = array_reverse(array_filter($this->availableMethods(), function ($method) use ($methodName){
+    public function methodReturnType(string $methodName): string
+    {
+        $method = array_reverse(array_filter($this->availableMethods(), function ($method) use ($methodName) {
             return $method->name === $methodName;
         }));
 
@@ -106,9 +112,10 @@ class FileClass
         $nameSpace = $this->namespace();
         if (isset($className[2])) {
             return isset($nameSpace)
-                ? $nameSpace . '\\' . $className[2]
+                ? $nameSpace.'\\'.$className[2]
                 : $className[2];
-        };
+        }
+
         return '';
     }
 
@@ -117,17 +124,20 @@ class FileClass
         return preg_match('/class [A-Za-z]* (extends|implements) ([a-zA-Z]*)/', $this->fileContents, $matches);
     }
 
-    private function namespacedParentClass(): string{
+    private function namespacedParentClass(): string
+    {
         preg_match('/[class|trait|interface] [A-Za-z]* (extends|implements) ([a-zA-Z\\\\]*)/', $this->fileContents, $matches);
         $parentClass = $matches[2];
+
         return str_contains($parentClass, '\\')
             ? $parentClass
-            : $this->uses[$parentClass] ?? $this->namespace . '\\' . $parentClass;
+            : $this->uses[$parentClass] ?? $this->namespace.'\\'.$parentClass;
     }
 
     private function namespace(): ?string
     {
         preg_match('/.+?namespace (.+?);/ms', $this->fileContents, $nameSpace);
+
         return $nameSpace[1] ?? null;
     }
 
@@ -169,5 +179,4 @@ class FileClass
     {
         $this->methods[] = new \App\Shift\Objects\ClassMethod($method, $this->className, $this->fileContents);
     }
-
 }
