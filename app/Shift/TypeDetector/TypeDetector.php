@@ -1,19 +1,26 @@
 <?php
+
 namespace App\Shift\TypeDetector;
+
+use App\Shift\Objects\FileClass;
+
 class TypeDetector
 {
+    private array $primitiveTypes = ['string', 'int', 'array', 'bool', 'float', 'callable', 'void'];
+    private array $selfReferringTypes = ['self', '$this', 'static'];
     public function methodReturnType(string $class, string $method): ?string
     {
         $file = file_get_contents($this->classMap()[$class]);
-        preg_match('/function\s+' . preg_quote($method) . '\s*\(.*\)\s*:\s*(\w+)/', $file, $matches);
-        $returnType = $matches[1]??$this->methodReturnFromDocs($file, $method);
-        if (in_array($returnType, ['string', 'int', 'array', 'bool', 'float', 'callable', 'void'])){
-            return $returnType;
-        }
-        if($returnType === 'self' || $returnType === '$this'){
+        $methodObject = array_filter((new FileClass($this->classMap()[$class]))->availableMethods(true), function ($classMethod) use ($method) {
+            return $classMethod->name === $method;
+        });
+        $returnType = array_pop($methodObject)->returnType;
+
+        if ($this->isSelfReferringType($returnType)) {
             return $class;
         }
-        if (strpos($returnType, '\\') !== false) {
+
+        if ($this->isPrimitiveType($returnType) || $this->isNamespacedType($returnType)) {
             return $returnType;
         }
         preg_match_all('/use\s+(.*);/', $file, $matches);
@@ -40,14 +47,30 @@ class TypeDetector
         return require config('shift.composer_path');
     }
 
-    private function methodReturnFromDocs(string $file, string $method): string{
-        if(preg_match('#^\h*/\*\*(?:\R\h*\*.*)*\R\h*\*/\R(?=.*\bfunction command\b)#m', $file, $matches) === 1){
-            preg_match('/@return\s+?(.+)\n/m', $matches[0], $matches);
-        }
-        if(isset($matches[1]) && $matches[1][0] === '\\'){
-            $matches[1] = mb_substr($matches[1], 1);
-        }
-        return $matches[1]??'void';
+    private function isNamespacedType(string $type): bool
+    {
+        return str_contains($type, '\\');
     }
+
+    private function isPrimitiveType(string $type): bool
+    {
+        return in_array($type, $this->primitiveTypes);
+    }
+
+    private function isSelfReferringType(string $type): bool
+    {
+        return in_array($type, $this->selfReferringTypes);
+    }
+
+//    private function methodReturnFromDocs(string $file, string $method): string
+//    {
+//        if (preg_match('#^\h*/\*\*(?:\R\h*\*.*)*\R\h*\*/\R(?=.*\bfunction ' . preg_quote($method) . '\b)#m', $file, $matches) === 1) {
+//            preg_match('/@return\s+?(.+)\n/m', $matches[0], $matches);
+//        }
+//        if (isset($matches[1]) && $matches[1][0] === '\\') {
+//            $matches[1] = mb_substr($matches[1], 1);
+//        }
+//        return $matches[1] ?? 'void';
+//    }
 
 }

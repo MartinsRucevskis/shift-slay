@@ -5,7 +5,7 @@ namespace App\Shift\FileMover;
 use App\Shift\Objects\ClassMethod;
 use App\Shift\Objects\FileClass;
 use App\Shift\Shifter\PackageUpdates;
-use App\Shift\TokenTraverser\TokenTraverer;
+use App\Shift\TokenTraverser\TokenTraverser;
 use App\Shift\TypeDetector\TypeDetector;
 use Exception;
 

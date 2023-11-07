@@ -2,6 +2,7 @@
 
 namespace App\Shift\Objects;
 use App\Shift\Enums\VisibilityEnum;
+use App\Shift\TypeDetector\FileAnalyzer;
 use PhpParser\Error;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Expr\Variable;
@@ -41,15 +42,14 @@ class FileClass
         $this->fileContents = file_get_contents($file);
         $classname = $this->className($file);
         $this->namespace = $this->namespace();
-        $this->uses = $this->useStatements();
+        $this->uses = (new FileAnalyzer($this->fileContents))->useStatements();
+        // TODO: Move this to function
         if (isset($classname)) {
             $this->className = $classname;
             $this->analyzeClass($this->fileContents);
             try {
                 if ($this->hasParentClass()) {
-                    preg_match('/[class|trait|interface] [A-Za-z]* (extends|implements) ([a-zA-Z\\\\]*)/', $this->fileContents, $matches);
-                    $classNames = str_contains($matches[2], '\\') ? $matches[2] : $this->uses[$matches[2]] ?? $this->namespace . '\\' . $matches[2];
-                    $this->parent = new self($this->classMap()[$classNames]);
+                    $this->parent = new self($this->classMap()[$this->namespacedParentClass()]);
                 }
             } catch (\Exception $e) {
                 throw new \Exception($e->getMessage());
@@ -71,7 +71,7 @@ class FileClass
         return $availableMethods;
     }
 
-    public function availableVariables(bool $includePrivate)
+    public function availableVariables(bool $includePrivate): ?array
     {
         $availableVariables = $this->properties;
         if (!$includePrivate) {
@@ -100,21 +100,6 @@ class FileClass
         return array_pop($method)->returnType ?? '';
     }
 
-
-    private function useStatements(): array
-    {
-        preg_match_all('/^use (.*?)( as (.*))?;$/m', $this->fileContents, $usedClasses, PREG_SET_ORDER);
-        $uses = [];
-        foreach ($usedClasses as $match) {
-            $className = $match[1];
-            $splitClassName = explode('\\', $className);
-            $alias = $match[3] ?? end($splitClassName);
-            $uses[$alias] = $className;
-        }
-        return $uses;
-    }
-
-
     private function className(string $file): ?string
     {
         preg_match('/(class|interface) (.+?)[ |\s+|{]/ms', $this->fileContents, $className);
@@ -124,12 +109,20 @@ class FileClass
                 ? $nameSpace . '\\' . $className[2]
                 : $className[2];
         };
-        throw new \Exception('This ain\'t a class or its something wierd >:(, i ain\'t no magician(For now)! Fix it yourself ' . $file . PHP_EOL);
+        return '';
     }
 
     private function hasParentClass(): bool
     {
         return preg_match('/class [A-Za-z]* (extends|implements) ([a-zA-Z]*)/', $this->fileContents, $matches);
+    }
+
+    private function namespacedParentClass(): string{
+        preg_match('/[class|trait|interface] [A-Za-z]* (extends|implements) ([a-zA-Z\\\\]*)/', $this->fileContents, $matches);
+        $parentClass = $matches[2];
+        return str_contains($parentClass, '\\')
+            ? $parentClass
+            : $this->uses[$parentClass] ?? $this->namespace . '\\' . $parentClass;
     }
 
     private function namespace(): ?string
@@ -143,23 +136,38 @@ class FileClass
         return require config('shift.composer_path');
     }
 
-    public function analyzeClass(string $fileContents)
+    public function analyzeClass(string $fileContents): void
     {
         $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
         $nodes = $parser->parse($fileContents)[0];
         $stmts = $nodes->stmts ?? [];
         foreach ($stmts as $node) {
-            if ($node instanceof Class_) {
-                foreach ($node->stmts as $stmt) {
-                    if ($stmt instanceof Property) {
-                        $this->properties[] = new ClassVariable($stmt, $this->className, $this->fileContents);
-                    }
-                    if ($stmt instanceof ClassMethod) {
-                        $this->methods[] = new \App\Shift\Objects\ClassMethod($stmt, $this->className);
-                    }
-                }
+            if ($node instanceof Class_ || $node instanceof Stmt\Interface_) {
+                $this->analyzeNode($node);
             }
         }
-
     }
+
+    private function analyzeNode($node): void
+    {
+        foreach ($node->stmts as $stmt) {
+            if ($stmt instanceof Property) {
+                $this->analyzeProperty($stmt);
+            }
+            if ($stmt instanceof ClassMethod) {
+                $this->analyzeMethod($stmt);
+            }
+        }
+    }
+
+    private function analyzeProperty(Property $property): void
+    {
+        $this->properties[] = new ClassVariable($property, $this->className, $this->fileContents);
+    }
+
+    private function analyzeMethod(ClassMethod $method): void
+    {
+        $this->methods[] = new \App\Shift\Objects\ClassMethod($method, $this->className, $this->fileContents);
+    }
+
 }

@@ -9,7 +9,7 @@ class TestController extends Controller
 
     public function endpoint(): void
     {
-        $supportPackage = $this->variable->someNewFunction();
+        $supportPackage = $this->variable->someFunction();
         $randomVariable = new SlayPackage($this->testString(
             $this->additionalString(),
             function () use ($supportPackage){
@@ -17,7 +17,7 @@ class TestController extends Controller
                 $this
                     ->additionalString().
                     $supportPackage
-                        ->randomStringNew();
+                        ->randomString();
             }
         ));
     }

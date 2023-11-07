@@ -14,12 +14,12 @@ class ClassVariable
     public string $visibility;
     public string $className;
 
-    public function __construct(Property $property, string $className, string $filecontents)
+    public function __construct(Property $property, string $className, string $fileContents)
     {
         $this->className = $className;
         $this->name = $property->props[0]->name;
         $this->visibility = $this->visibility($property);
-        $this->type = $property->type ?? $this->typeFromDocBlock($filecontents);
+        $this->type = $property->type ?? $this->typeFromDocBlock($fileContents);
     }
     private function visibility(Property|ClassMethod $instance): string
     {
@@ -34,13 +34,14 @@ class ClassVariable
     }
 
     private function typeFromDocBlock(string $fileContents): ?string {
-        if(preg_match('#^\h*/\*\*(?:\R\h*\*.*)*\R\h*\*/\R(?=.*\b'.preg_quote($this->visibility).'\s+\$'.preg_quote($this->name).'\b)#m', $fileContents, $matches)) {
-            preg_match('/@var\s+?(.+)\n/m', $matches[0], $matches);
+        if(preg_match('#^\h*/\*\*(?:\R\h*\*.*)*\R\h*\*/\R(?=.*\b'.preg_quote($this->visibility).'\s+(static\s+)?\$'.preg_quote($this->name).'\b)#m', $fileContents, $docBlock)) {
+            preg_match('/@var\s+?(.+)\n/m', $docBlock[0], $varType);
         }
-        if(isset($matches[1]) && $matches[1][0] === '\\'){
-            $matches[1] = mb_substr($matches[1], 1);
+        if(isset($varType[1]) && $varType[1][0] === '\\'){
+            $varType[1] = mb_substr($varType[1], 1);
         }
-        return $matches[1];
+
+        return $varType[1] ?? '';
     }
 
 }

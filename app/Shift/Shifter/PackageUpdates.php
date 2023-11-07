@@ -46,7 +46,7 @@ class PackageUpdates
                 'Laravel\Lumen\Console\Kernel' => [
                     'replaceWith' =>
                         'Illuminate\Foundation\Console\Kernel'
-                ]
+                ],
             ],
             default => [
 

@@ -6,13 +6,13 @@ use App\Shift\Objects\ClassMethod;
 use App\Shift\Objects\FileClass;
 use App\Shift\Shifter\CommonUpdates;
 use App\Shift\Shifter\PackageUpdates;
-use App\Shift\TokenTraverser\TokenTraverer;
+use App\Shift\TokenTraverser\TokenTraverser;
 use App\Shift\TypeDetector\TypeDetector;
 
 class FixMethod
 {
     private array $tokens;
-    private TokenTraverer $tokenTraverse;
+    private TokenTraverser $tokenTraverse;
     /**
      * @var array[]
      */
@@ -33,7 +33,7 @@ class FixMethod
         preg_match('/.*?function.*?\(.*?\):? ?(.*?)[\s+]?{(.*)}/ms', $this->methodBody($method), $matches);
         $this->tokens = $this->removePhpTags($this->chopTokens(token_get_all('<?php' . $matches[2] . '?>')));
         $originalTokens = $this->tokens;
-        $this->tokenTraverse = new TokenTraverer($this->tokens);
+        $this->tokenTraverse = new TokenTraverser($this->tokens);
         $this->availableVariables = array_reduce($method->params, function ($carry, $methodParam) {
             $carry[$methodParam->name] = $methodParam->type;
             return $carry;
@@ -62,7 +62,7 @@ class FixMethod
         });
         $this->tokens = $this->removePhpTags($this->chopTokens(token_get_all($this->class->fileContents)));
         $originalTokens = $this->tokens;
-        $this->tokenTraverse = new TokenTraverer($this->tokens);
+        $this->tokenTraverse = new TokenTraverser($this->tokens);
         for ($i = 0; $i < count($this->tokens); $i++) {
             $logicalLineEnding = $this->tokenTraverse->traverseTillNextDeclaration($i);
             $this->fixLogicalLine($i, $logicalLineEnding);
@@ -75,7 +75,7 @@ class FixMethod
 
     public function fixLogicalLine(int $start, int $end): string
     {
-        if (str_contains($this->tokens[0], ' ')) {
+        if (str_contains($this->tokens[$start], ' ')) {
             $start++;
             if ($start === $end) {
                 return '';
@@ -90,6 +90,7 @@ class FixMethod
         $start = $isDeclaring ? $start + 3 : $start;
         $currentType = 'self';
         $declaresObject = $this->tokens[$start] === '(';
+        $start = $declaresObject ? $start+1 : $start;
         for ($i = $start; $i < $end; $i++) {
             if ($this->tokens[$i] === '$this') {
                 $currentType = 'self';
@@ -126,6 +127,7 @@ class FixMethod
                 $currentType = $this->class->uses[$this->tokens[$i]];
 
             } elseif (in_array($this->tokens[$i], [',', '.'])) {
+                $i++;
                 $this->fixLogicalLine($i, $end);
                 $i = $end;
 
@@ -144,8 +146,12 @@ class FixMethod
 
             } elseif (in_array($this->tokens[$i], array_keys(CommonUpdates::commonChanges()['helpers']))) {
                 foreach ($this->tokenTraverse->getParams($i) as $param){
-                    if ($change = CommonUpdates::commonChanges()['helpers'][implode('', $param)] !== null){
-                        $tokenized = $this->removePhpTags($this->chopTokens(token_get_all('<?php' . $change . '?>')));
+
+                    if (isset(CommonUpdates::commonChanges()['helpers'][$this->tokens[$i]]['params'][implode('', $param)])){
+                        // TODO: use tokens for replacement or just *file-up-to-this-point*->'replace function call and params with regex'
+//                        $change = CommonUpdates::commonChanges()['helpers'][$this->tokens[$i]]['params'][implode('', $param)];
+/*                        $tokenized = $this->removePhpTags($this->chopTokens(token_get_all('<?php ' . $change . '?>')));*/
+//                        array_splice($this->tokens, $)
                     }
                 }
             }

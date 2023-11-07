@@ -2,7 +2,7 @@
 
 namespace App\Shift\TokenTraverser;
 
-class TokenTraverer
+class TokenTraverser
 {
     public function __construct(private readonly array $tokens)
     {
@@ -40,25 +40,25 @@ class TokenTraverer
         return $this->tokens[$start][0] === '$' || $this->tokens[$start+1] !== '(';
     }
 
-    public function traverseTillNextParenthesis(string $parenthesisType, int $start): int{
-        if($parenthesisType !== '(' && $parenthesisType !== '{' && $parenthesisType !== '['){
+    public function traverseTillNextParenthesis(string $parenthesisType, int $position): int {
+        $parenthesisMap = ['(' => ')', '{' => '}', '[' => ']'];
+        if (!array_key_exists($parenthesisType, $parenthesisMap)) {
             throw new \Exception('This ain\'t a parenthesis you foo');
         }
-        $parenthesisCount = 1;
-        $ending = $start;
-        $start++;
-        $parenthesisMap = ['(' => ')', '{' => '}', '[' => ']'];
-        for ($i = $start; $parenthesisCount !== 0 ; $i++){
-            $ending++;
-            if ($parenthesisType === $this->tokens[$i]){
+
+        $parenthesisCount = 0;
+        $closingParenthesis = $parenthesisMap[$parenthesisType];
+        do {
+            if ($this->tokens[$position] === $parenthesisType) {
                 $parenthesisCount++;
-            } elseif ( $this->tokens[$i] === $parenthesisMap[$parenthesisType]){
+            } elseif ($this->tokens[$position] === $closingParenthesis) {
                 $parenthesisCount--;
             }
-        }
-        return $ending;
-    }
+            $position++;
+        } while ($parenthesisCount !== 0);
 
+        return $position - 1;
+    }
     public function ignoreComment(int $start): int{
     }
 
