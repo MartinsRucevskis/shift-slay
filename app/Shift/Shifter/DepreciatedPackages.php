@@ -15,6 +15,9 @@ class DepreciatedPackages
         return in_array($this->package, $this->depreciatedPackaged());
     }
 
+    /**
+     * @return mixed[]
+     */
     private function depreciatedPackaged(): array
     {
         $command = config('shift.command_name');

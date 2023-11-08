@@ -6,8 +6,14 @@ use App\Shift\Objects\FileClass;
 
 class TypeDetector
 {
+    /**
+     * @var string[]
+     */
     private array $primitiveTypes = ['string', 'int', 'array', 'bool', 'float', 'callable', 'void'];
 
+    /**
+     * @var string[]
+     */
     private array $selfReferringTypes = ['self', '$this', 'static'];
 
     public function methodReturnType(string $class, string $method): ?string
@@ -45,6 +51,9 @@ class TypeDetector
         return "$namespace\\$returnType";
     }
 
+    /**
+     * @return array<string, string>
+     */
     private function classMap(): array
     {
         return require config('shift.composer_path');

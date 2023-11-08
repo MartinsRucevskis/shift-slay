@@ -4,6 +4,9 @@ namespace App\Shift\Shifter;
 
 class CommonUpdates
 {
+    /**
+     * @return mixed[]
+     */
     public static function commonChanges(): array
     {
         $command = config('shift.command_name');

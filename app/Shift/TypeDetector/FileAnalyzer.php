@@ -8,6 +8,9 @@ class FileAnalyzer
     {
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function useStatements(): array
     {
         preg_match_all('/^use (.*?)( as (.*))?;$/m', $this->fileContents, $imports, PREG_SET_ORDER);

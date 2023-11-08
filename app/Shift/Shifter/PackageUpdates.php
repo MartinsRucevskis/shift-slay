@@ -4,6 +4,9 @@ namespace App\Shift\Shifter;
 
 class PackageUpdates
 {
+    /**
+     * @return mixed[]
+     */
     public static function methodChanges(): array
     {
         $command = config('shift.command_name');

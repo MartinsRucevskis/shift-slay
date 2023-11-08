@@ -12,7 +12,6 @@ class Shift
     /**
      * @var string[]
      */
-    private array $overLappingFiles = [];
 
     private array $filesToOverwrite = [
         'web/tests/_bootstrap.php',
@@ -20,7 +19,7 @@ class Shift
         'web/public/index.php',
     ];
 
-    public function run($directory): void
+    public function run(string $directory): void
     {
         //        $this->addLaravelFiles('C:\Users\martins.rucevskis\plainLaravel8', $directory);
         $this->fixConfig($directory);
@@ -28,7 +27,7 @@ class Shift
         $this->fixCodeceptionConfig($directory);
     }
 
-    private function addLaravelFiles($sourceDirectory, $destinationDirectory)
+    private function addLaravelFiles(string $sourceDirectory, string $destinationDirectory): void
     {
         $filesAndDirectories = scandir($sourceDirectory);
 
@@ -56,7 +55,7 @@ class Shift
         }
     }
 
-    private function fixFiles($directory)
+    private function fixFiles(string $directory): void
     {
         $filesAndDirectories = scandir($directory);
 
@@ -86,7 +85,7 @@ class Shift
         }
     }
 
-    private function fixConfig($directory): void
+    private function fixConfig(string $directory): void
     {
         $appBoostrap = file_get_contents("{$directory}/bootstrap/app.php");
 
@@ -156,6 +155,9 @@ class Shift
         return $items === [] ? $array : $items;
     }
 
+    /**
+     * @return string[]
+     */
     private function bootstrapMiddlewares(string $bootstrap): array
     {
         preg_match_all('#\$app->middleware\(([=>\s+\',\[\]A-za-z\\:]*)\);#m', $bootstrap, $middlewares);
@@ -240,6 +242,9 @@ class Shift
         return preg_split('/\r\n|\n|\r/', $kernelMiddlewares[1]);
     }
 
+    /**
+     * @return array<string, string[]|string>
+     */
     private function splitMiddlewareGroups(array $groups): array
     {
         $middlewares = [];

@@ -4,6 +4,9 @@ namespace App\Shift\TokenTraverser;
 
 class TokenTraverser
 {
+    /**
+     * @param string[] $tokens
+     */
     public function __construct(private readonly array $tokens)
     {
     }
@@ -64,16 +67,15 @@ class TokenTraverser
         return $position - 1;
     }
 
-    public function ignoreComment(int $start): int
-    {
-    }
-
     public function isNewLine(string $token): bool
     {
         return ord($token) === 13;
     }
 
-    public function getParams(int $start)
+    /**
+     * @return  array<int, array<string>>.
+     */
+    public function getParams(int $start): array
     {
         $start++;
         $ending = $this->traverseTillNextParenthesis($this->tokens[$start], $start);

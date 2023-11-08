@@ -153,9 +153,9 @@ class FixMethod
 
                     if (isset(CommonUpdates::commonChanges()['helpers'][$this->tokens[$i]]['params'][implode('', $param)])) {
                         // TODO: use tokens for replacement or just *file-up-to-this-point*->'replace function call and params with regex'
-                        //                        $change = CommonUpdates::commonChanges()['helpers'][$this->tokens[$i]]['params'][implode('', $param)];
-                        /*                        $tokenized = $this->removePhpTags($this->chopTokens(token_get_all('<?php ' . $change . '?>')));*/
-                        //                        array_splice($this->tokens, $)
+                        // $change = CommonUpdates::commonChanges()['helpers'][$this->tokens[$i]]['params'][implode('', $param)];
+                        /* $tokenized = $this->removePhpTags($this->chopTokens(token_get_all('<?php ' . $change . '?>')));*/
+                        // array_splice($this->tokens, $)
                     }
                 }
             }
