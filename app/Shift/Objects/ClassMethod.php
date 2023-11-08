@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shift\Objects;
 
 use PhpParser\Node\Stmt\Property;
@@ -14,8 +16,6 @@ class ClassMethod
 
     public string $name;
 
-    public string $className;
-
     public ?string $returnType;
 
     /**
@@ -23,9 +23,8 @@ class ClassMethod
      */
     public array $params = [];
 
-    public function __construct(\PhpParser\Node\Stmt\ClassMethod $method, string $className, string $fileContents)
+    public function __construct(\PhpParser\Node\Stmt\ClassMethod $method, public string $className, string $fileContents)
     {
-        $this->className = $className;
         $this->name = $method->name->name;
         foreach ($method->params as $param) {
             $this->params[] = new MethodParam($param);

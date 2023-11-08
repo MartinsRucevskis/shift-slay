@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shift\Shifter;
 
 class DepreciatedPackages
@@ -21,7 +23,7 @@ class DepreciatedPackages
     private function depreciatedPackaged(): array
     {
         $command = config('shift.command_name');
-        $command = explode(':', $command);
+        $command = explode(':', (string) $command);
         $command = $command[1];
 
         return match ($command) {

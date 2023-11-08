@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shift\TypeDetector;
 
 use App\Shift\Objects\FileClass;
@@ -19,9 +21,7 @@ class TypeDetector
     public function methodReturnType(string $class, string $method): ?string
     {
         $file = file_get_contents($this->classMap()[$class]);
-        $methodObject = array_filter((new FileClass($this->classMap()[$class]))->availableMethods(true), function ($classMethod) use ($method) {
-            return $classMethod->name === $method;
-        });
+        $methodObject = array_filter((new FileClass($this->classMap()[$class]))->availableMethods(true), fn($classMethod) => $classMethod->name === $method);
         $returnType = array_pop($methodObject)->returnType;
 
         if ($this->isSelfReferringType($returnType)) {
@@ -35,11 +35,11 @@ class TypeDetector
         $uses = $matches[1];
 
         foreach ($uses as $use) {
-            if (substr($use, strrpos($use, '\\') + 1) === $returnType) {
+            if (substr((string) $use, strrpos((string) $use, '\\') + 1) === $returnType) {
                 return $use;
             }
-            if (strpos($use, ' as ') !== false) {
-                [$use, $alias] = explode(' as ', $use);
+            if (str_contains((string) $use, ' as ')) {
+                [$use, $alias] = explode(' as ', (string) $use);
                 if ($alias === $returnType) {
                     return $use;
                 }

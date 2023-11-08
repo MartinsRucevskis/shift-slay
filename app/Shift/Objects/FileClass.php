@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shift\Objects;
 
 use App\Shift\Enums\VisibilityEnum;
@@ -22,8 +24,6 @@ class FileClass
 
     public string $fileContents;
 
-    public string $fileLocation = '';
-
     /**
      * @var \App\Shift\Objects\ClassMethod[]|null
      */
@@ -37,11 +37,10 @@ class FileClass
     /**
      * @throws \Exception
      */
-    public function __construct(string $file)
+    public function __construct(public string $fileLocation)
     {
-        $this->fileLocation = $file;
-        $this->fileContents = file_get_contents($file);
-        $classname = $this->className($file);
+        $this->fileContents = file_get_contents($fileLocation);
+        $classname = $this->className($fileLocation);
         $this->namespace = $this->namespace();
         $this->uses = (new FileAnalyzer($this->fileContents))->useStatements();
         // TODO: Move this to function
@@ -62,12 +61,10 @@ class FileClass
     {
         $availableMethods = $this->methods;
         if (! $includePrivate) {
-            $availableMethods = array_filter($availableMethods, function (\App\Shift\Objects\ClassMethod $availableMethod) {
-                return $availableMethod->visibility !== VisibilityEnum::PRIVATE;
-            });
+            $availableMethods = array_filter($availableMethods, fn(\App\Shift\Objects\ClassMethod $availableMethod) => $availableMethod->visibility !== VisibilityEnum::PRIVATE);
         }
         if (isset($this->parent)) {
-            $availableMethods = array_merge($availableMethods, $this->parent->availableMethods(false));
+            $availableMethods = [...$availableMethods, ...$this->parent->availableMethods(false)];
         }
 
         return $availableMethods;
@@ -77,9 +74,7 @@ class FileClass
     {
         $availableVariables = $this->properties;
         if (! $includePrivate) {
-            $availableVariables = array_filter($availableVariables, function (ClassVariable $availableVariable) {
-                return $availableVariable->visibility !== VisibilityEnum::PRIVATE;
-            });
+            $availableVariables = array_filter($availableVariables, fn(ClassVariable $availableVariable) => $availableVariable->visibility !== VisibilityEnum::PRIVATE);
         }
         if (isset($this->parent)) {
             $availableVariables = array_merge($availableVariables, $this->parent->availableVariables(false));
@@ -90,18 +85,14 @@ class FileClass
 
     public function variableType(string $variableName): string
     {
-        $type = array_filter($this->availableVariables(true), function ($variable) use ($variableName) {
-            return $variable->name === $variableName;
-        });
+        $type = array_filter($this->availableVariables(true), fn($variable) => $variable->name === $variableName);
 
         return $type[0]?->type ?? '';
     }
 
     public function methodReturnType(string $methodName): string
     {
-        $method = array_reverse(array_filter($this->availableMethods(), function ($method) use ($methodName) {
-            return $method->name === $methodName;
-        }));
+        $method = array_reverse(array_filter($this->availableMethods(), fn($method) => $method->name === $methodName));
 
         return array_pop($method)->returnType ?? '';
     }
@@ -158,7 +149,7 @@ class FileClass
         }
     }
 
-    private function analyzeNode($node): void
+    private function analyzeNode(\PhpParser\Node\Stmt\Class_|\PhpParser\Node\Stmt\Interface_ $node): void
     {
         foreach ($node->stmts as $stmt) {
             if ($stmt instanceof Property) {

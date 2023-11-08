@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shift;
 
 use App\Shift\FileMover\FixFile;
@@ -68,11 +70,11 @@ class Shift
         foreach ($filesAndDirectories as $fileOrDirectory) {
             $fullPath = $directory.'/'.$fileOrDirectory;
             if (is_dir($fullPath)) {
-                if (str_contains($fileOrDirectory, 'vendor')) {
+                if (str_contains((string) $fileOrDirectory, 'vendor')) {
                     continue;
                 }
                 $this->fixFiles($fullPath);
-            } elseif (str_contains($fileOrDirectory, '.php') && ! str_contains($fileOrDirectory, 'autoload.php')) {
+            } elseif (str_contains((string) $fileOrDirectory, '.php') && ! str_contains((string) $fileOrDirectory, 'autoload.php')) {
                 try {
                     (new FixFile(
                         new FileClass($fullPath)
@@ -95,7 +97,7 @@ class Shift
         copy(__DIR__.'/Laravel8ShiftFiles/bootstrapAppCodeception.txt', "{$directory}/bootstrap/app.php");
 
         $configApp = file_get_contents("{$directory}/config/app.php");
-        $configAliases = array_unique(array_merge($this->configAliases($configApp), $aliases));
+        $configAliases = array_unique([...$this->configAliases($configApp), ...$aliases]);
         $configAliases = implode(PHP_EOL, $configAliases);
 
         $configApp = preg_replace('#\'aliases\' => \[([\s\S]*?)\]#m', '\'aliases\' => ['.$configAliases.']', $configApp);
@@ -111,22 +113,18 @@ class Shift
 
         $kernel = file_get_contents("{$directory}/app/Http/Kernel.php");
 
-        $groups = array_filter($middlewares, function (&$middleware) {
-            return str_contains($middleware, '=>');
-        });
-        $nonGroups = array_filter($middlewares, function ($middleware) {
-            return ! str_contains($middleware, '=>');
-        });
+        $groups = array_filter($middlewares, fn(&$middleware) => str_contains((string) $middleware, '=>'));
+        $nonGroups = array_filter($middlewares, fn($middleware) => ! str_contains((string) $middleware, '=>'));
         $kernelMiddlewares = $this->kernelMiddlewares($kernel);
         foreach ($kernelMiddlewares as $kernelMiddleware) {
             foreach ($middlewares as $key => $providerName) {
-                $middlewareClass = preg_replace('/\s+/', '', $kernelMiddleware);
+                $middlewareClass = preg_replace('/\s+/', '', (string) $kernelMiddleware);
                 if ($providerName === $middlewareClass) {
                     unset($middlewares[$key]);
                 }
             }
         }
-        $middlewares = array_merge($kernelMiddlewares, $nonGroups);
+        $middlewares = [...$kernelMiddlewares, ...$nonGroups];
         $middlewares = implode(PHP_EOL, $middlewares);
         $kernel = preg_replace('#\\$middleware = \[([\s\S]*?)\]#m', '$middleware = ['.$middlewares.']', $kernel);
         file_put_contents("{$directory}/app/Http/Kernel.php", $kernel);
@@ -140,8 +138,8 @@ class Shift
     {
         $items = [];
         foreach ($array as $item) {
-            if ($item[0] === '[' && $item[strlen($item) - 1]) {
-                $item = substr($item, 1, -1);
+            if ($item[0] === '[' && $item[strlen((string) $item) - 1]) {
+                $item = substr((string) $item, 1, -1);
                 $item = preg_replace('#\s+#', '', $item);
                 $stringAsArray = explode(',', $item);
                 if (end($stringAsArray) === '') {
@@ -175,12 +173,12 @@ class Shift
         $providers = $providers[1];
         $bootstrapImports = (new FileAnalyzer($bootstrap))->useStatements();
         foreach ($providers as &$provider) {
-            if (! str_contains($provider, '\\')) {
-                if (isset($bootstrapImports[str_replace('::class', '', $provider)])) {
-                    $provider = $bootstrapImports[str_replace('::class', '', $provider)];
+            if (! str_contains((string) $provider, '\\')) {
+                if (isset($bootstrapImports[str_replace('::class', '', (string) $provider)])) {
+                    $provider = $bootstrapImports[str_replace('::class', '', (string) $provider)];
                 }
             }
-            if (! str_contains($provider, '::class')) {
+            if (! str_contains((string) $provider, '::class')) {
                 $provider .= '::class';
             }
             $provider .= ',';
@@ -194,7 +192,7 @@ class Shift
         preg_match_all('#\$app->alias\(([=>\s+\',\[\]A-za-z\\:]*)\);#m', $bootstrap, $aliases);
         $aliases = $aliases[1];
         foreach ($aliases as &$alias) {
-            $alias = str_replace(['"', '\''], '', $alias);
+            $alias = str_replace(['"', '\''], '', (string) $alias);
             if (! str_contains($alias, '::class')) {
                 $alias .= '::class';
             }
@@ -224,14 +222,14 @@ class Shift
     {
         foreach ($configProviders as $configProvider) {
             foreach ($providers as $key => $providerName) {
-                $configClass = preg_replace('/\s+/', '', $configProvider);
+                $configClass = preg_replace('/\s+/', '', (string) $configProvider);
                 if ($providerName === $configClass || (new DepreciatedPackages($providerName))->isDepreciated()) {
                     unset($providers[$key]);
                 }
             }
         }
 
-        return array_merge($configProviders, $providers);
+        return [...$configProviders, ...$providers];
     }
 
     private function kernelMiddlewares(string $kernel): array
@@ -247,7 +245,7 @@ class Shift
     private function splitMiddlewareGroups(array $groups): array
     {
         $middlewares = [];
-        array_map(function ($middleware) use (&$middlewares) {
+        array_map(function ($middleware) use (&$middlewares): void {
             $splitMiddleware = explode('=>', $middleware);
             $splitMiddleware[0] = preg_replace('/\s+/', '', $splitMiddleware[0]);
             $splitMiddleware[0] = trim($splitMiddleware[0], '\'"');

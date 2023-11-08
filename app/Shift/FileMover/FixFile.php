@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shift\FileMover;
 
 use App\Shift\Objects\FileClass;
@@ -8,7 +10,7 @@ use Exception;
 
 class FixFile
 {
-    public function __construct(private FileClass $class)
+    public function __construct(private readonly FileClass $class)
     {
     }
 
@@ -16,9 +18,7 @@ class FixFile
     {
         echo 'I am fixing '.$this->class->className.PHP_EOL;
         if (isset($this->class->className)) {
-            $classMethods = array_filter($this->class->availableMethods(), function ($method) {
-                return $method->className === $this->class->className;
-            });
+            $classMethods = array_filter($this->class->availableMethods(), fn($method) => $method->className === $this->class->className);
             foreach ($classMethods as $classMethod) {
                 try {
                     (new FixMethod($this->class))->fixMethod($classMethod);
@@ -37,13 +37,17 @@ class FixFile
     {
         $updates = PackageUpdates::methodChanges();
         foreach ($this->class->uses as $alias => $package) {
-            if (isset($updates[$package]) && isset($updates[$package]['replaceWith'])) {
-                $this->class->fileContents = str_replace(
-                    'use '.$this->constructImportString($package, $alias).';',
-                    'use '.$this->constructImportString($updates[$package]['replaceWith'], $alias).';',
-                    $this->class->fileContents
-                );
+            if (!isset($updates[$package])) {
+                continue;
             }
+            if (!isset($updates[$package]['replaceWith'])) {
+                continue;
+            }
+            $this->class->fileContents = str_replace(
+                'use '.$this->constructImportString($package, $alias).';',
+                'use '.$this->constructImportString($updates[$package]['replaceWith'], $alias).';',
+                $this->class->fileContents
+            );
         }
         file_put_contents($this->class->fileLocation, $this->class->fileContents);
     }

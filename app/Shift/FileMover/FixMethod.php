@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shift\FileMover;
 
 use App\Shift\Objects\ClassMethod;
@@ -20,18 +22,16 @@ class FixMethod
      */
     private array $availableVariables;
 
-    public function __construct(private FileClass $class)
+    public function __construct(private readonly FileClass $class)
     {
 
     }
 
-    public function fixMethod(ClassMethod $method)
+    public function fixMethod(ClassMethod $method): void
     {
         $needReplacing[] = array_intersect_key(PackageUpdates::methodChanges(), array_flip($this->class->uses));
 
-        $aliases = array_filter($this->class->uses, function ($use) use ($needReplacing) {
-            return in_array($use, array_keys($needReplacing[0]));
-        });
+        $aliases = array_filter($this->class->uses, fn($use) => in_array($use, array_keys($needReplacing[0])));
         preg_match('/.*?function.*?\(.*?\):? ?(.*?)[\s+]?{(.*)}/ms', $this->methodBody($method), $matches);
         $this->tokens = $this->removePhpTags($this->chopTokens(token_get_all('<?php'.$matches[2].'?>')));
         $originalTokens = $this->tokens;
@@ -57,13 +57,11 @@ class FixMethod
         file_put_contents($this->class->fileLocation, $this->class->fileContents);
     }
 
-    public function fix()
+    public function fix(): void
     {
         $needReplacing[] = array_intersect_key(PackageUpdates::methodChanges(), array_flip($this->class->uses));
 
-        $aliases = array_filter($this->class->uses, function ($use) use ($needReplacing) {
-            return in_array($use, array_keys($needReplacing[0]));
-        });
+        $aliases = array_filter($this->class->uses, fn($use) => in_array($use, array_keys($needReplacing[0])));
         $this->tokens = $this->removePhpTags($this->chopTokens(token_get_all($this->class->fileContents)));
         $originalTokens = $this->tokens;
         $this->tokenTraverse = new TokenTraverser($this->tokens);
@@ -79,7 +77,7 @@ class FixMethod
 
     public function fixLogicalLine(int $start, int $end): string
     {
-        if (str_contains($this->tokens[$start], ' ')) {
+        if (str_contains((string) $this->tokens[$start], ' ')) {
             $start++;
             if ($start === $end) {
                 return '';
@@ -90,7 +88,7 @@ class FixMethod
             $isDeclaring = ($this->tokens[$start][0] === '$' && $this->tokens[$start + 1] === ' ' && $this->tokens[$start + 2] === '=');
         }
 
-        $declaringVariable = str_replace('$', '', $this->tokens[$start]);
+        $declaringVariable = str_replace('$', '', (string) $this->tokens[$start]);
         $start = $isDeclaring ? $start + 3 : $start;
         $currentType = 'self';
         $declaresObject = $this->tokens[$start] === '(';
@@ -118,7 +116,7 @@ class FixMethod
                         $currentType = $this->class->methodReturnType($this->tokens[$i]);
 
                     } elseif (! in_array($currentType, ['void', 'string', 'int', 'array', 'null', ''])) {
-                        if (! str_contains($currentType, '\\')) {
+                        if (! str_contains((string) $currentType, '\\')) {
                             $currentType = $this->class->uses[$currentType];
                         }
                         $currentType = (new TypeDetector())->methodReturnType($currentType, $this->tokens[$i]);
@@ -142,7 +140,7 @@ class FixMethod
                 $i = $closingTagIndex + 1;
 
             } elseif ($this->tokens[$i][0] === '$') {
-                $variableDeclaration = str_replace('$', '', $this->tokens[$i]);
+                $variableDeclaration = str_replace('$', '', (string) $this->tokens[$i]);
                 $currentType = $this->availableVariables[$variableDeclaration];
 
             } elseif (in_array($this->tokens[$i], array_keys($this->class->uses))) {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shift\Objects;
 
 use App\Shift\Enums\VisibilityEnum;
@@ -16,11 +18,8 @@ class ClassVariable
 
     public string $visibility;
 
-    public string $className;
-
-    public function __construct(Property $property, string $className, string $fileContents)
+    public function __construct(Property $property, public string $className, string $fileContents)
     {
-        $this->className = $className;
         $this->name = $property->props[0]->name;
         $this->visibility = $this->visibility($property);
         $this->type = $property->type ?? $this->typeFromDocBlock($fileContents);

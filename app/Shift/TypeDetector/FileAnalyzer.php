@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shift\TypeDetector;
 
 class FileAnalyzer
 {
-    public function __construct(private string $fileContents)
+    public function __construct(private readonly string $fileContents)
     {
     }
 

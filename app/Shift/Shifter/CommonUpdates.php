@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Shift\Shifter;
 
 class CommonUpdates
@@ -10,7 +12,7 @@ class CommonUpdates
     public static function commonChanges(): array
     {
         $command = config('shift.command_name');
-        $command = explode(':', $command);
+        $command = explode(':', (string) $command);
         $command = $command[1];
 
         return match ($command) {
