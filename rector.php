@@ -23,7 +23,6 @@ return static function (RectorConfig $rectorConfig): void {
         __DIR__ . '/public',
         __DIR__ . '/resources',
         __DIR__ . '/routes',
-        __DIR__ . '/tests',
     ]);
 
     // register a single rule
@@ -39,9 +38,10 @@ return static function (RectorConfig $rectorConfig): void {
         ChangeAndIfToEarlyReturnRector::class,
         FlipNegatedTernaryInstanceofRector::class
     ]);
-
     // define sets of rules
     $rectorConfig->sets([
         LevelSetList::UP_TO_PHP_81,
     ]);
+
+    $rectorConfig->
 };
