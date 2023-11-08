@@ -61,7 +61,7 @@ class FileClass
     {
         $availableMethods = $this->methods;
         if (! $includePrivate) {
-            $availableMethods = array_filter($availableMethods, fn(\App\Shift\Objects\ClassMethod $availableMethod) => $availableMethod->visibility !== VisibilityEnum::PRIVATE);
+            $availableMethods = array_filter($availableMethods, fn (\App\Shift\Objects\ClassMethod $availableMethod) => $availableMethod->visibility !== VisibilityEnum::PRIVATE);
         }
         if (isset($this->parent)) {
             $availableMethods = [...$availableMethods, ...$this->parent->availableMethods(false)];
@@ -74,7 +74,7 @@ class FileClass
     {
         $availableVariables = $this->properties;
         if (! $includePrivate) {
-            $availableVariables = array_filter($availableVariables, fn(ClassVariable $availableVariable) => $availableVariable->visibility !== VisibilityEnum::PRIVATE);
+            $availableVariables = array_filter($availableVariables, fn (ClassVariable $availableVariable) => $availableVariable->visibility !== VisibilityEnum::PRIVATE);
         }
         if (isset($this->parent)) {
             $availableVariables = array_merge($availableVariables, $this->parent->availableVariables(false));
@@ -85,14 +85,14 @@ class FileClass
 
     public function variableType(string $variableName): string
     {
-        $type = array_filter($this->availableVariables(true), fn($variable) => $variable->name === $variableName);
+        $type = array_filter($this->availableVariables(true), fn ($variable) => $variable->name === $variableName);
 
         return $type[0]?->type ?? '';
     }
 
     public function methodReturnType(string $methodName): string
     {
-        $method = array_reverse(array_filter($this->availableMethods(), fn($method) => $method->name === $methodName));
+        $method = array_reverse(array_filter($this->availableMethods(), fn ($method) => $method->name === $methodName));
 
         return array_pop($method)->returnType ?? '';
     }
@@ -149,7 +149,7 @@ class FileClass
         }
     }
 
-    private function analyzeNode(\PhpParser\Node\Stmt\Class_|\PhpParser\Node\Stmt\Interface_ $node): void
+    private function analyzeNode(Class_|\PhpParser\Node\Stmt\Interface_ $node): void
     {
         foreach ($node->stmts as $stmt) {
             if ($stmt instanceof Property) {

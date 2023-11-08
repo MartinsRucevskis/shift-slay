@@ -21,7 +21,7 @@ class TypeDetector
     public function methodReturnType(string $class, string $method): ?string
     {
         $file = file_get_contents($this->classMap()[$class]);
-        $methodObject = array_filter((new FileClass($this->classMap()[$class]))->availableMethods(true), fn($classMethod) => $classMethod->name === $method);
+        $methodObject = array_filter((new FileClass($this->classMap()[$class]))->availableMethods(true), fn ($classMethod) => $classMethod->name === $method);
         $returnType = array_pop($methodObject)->returnType;
 
         if ($this->isSelfReferringType($returnType)) {

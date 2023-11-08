@@ -31,7 +31,7 @@ class FixMethod
     {
         $needReplacing[] = array_intersect_key(PackageUpdates::methodChanges(), array_flip($this->class->uses));
 
-        $aliases = array_filter($this->class->uses, fn($use) => in_array($use, array_keys($needReplacing[0])));
+        $aliases = array_filter($this->class->uses, fn ($use) => in_array($use, array_keys($needReplacing[0])));
         preg_match('/.*?function.*?\(.*?\):? ?(.*?)[\s+]?{(.*)}/ms', $this->methodBody($method), $matches);
         $this->tokens = $this->removePhpTags($this->chopTokens(token_get_all('<?php'.$matches[2].'?>')));
         $originalTokens = $this->tokens;
@@ -61,7 +61,7 @@ class FixMethod
     {
         $needReplacing[] = array_intersect_key(PackageUpdates::methodChanges(), array_flip($this->class->uses));
 
-        $aliases = array_filter($this->class->uses, fn($use) => in_array($use, array_keys($needReplacing[0])));
+        $aliases = array_filter($this->class->uses, fn ($use) => in_array($use, array_keys($needReplacing[0])));
         $this->tokens = $this->removePhpTags($this->chopTokens(token_get_all($this->class->fileContents)));
         $originalTokens = $this->tokens;
         $this->tokenTraverse = new TokenTraverser($this->tokens);

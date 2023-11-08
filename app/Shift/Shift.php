@@ -113,8 +113,8 @@ class Shift
 
         $kernel = file_get_contents("{$directory}/app/Http/Kernel.php");
 
-        $groups = array_filter($middlewares, fn(&$middleware) => str_contains((string) $middleware, '=>'));
-        $nonGroups = array_filter($middlewares, fn($middleware) => ! str_contains((string) $middleware, '=>'));
+        $groups = array_filter($middlewares, fn (&$middleware) => str_contains((string) $middleware, '=>'));
+        $nonGroups = array_filter($middlewares, fn ($middleware) => ! str_contains((string) $middleware, '=>'));
         $kernelMiddlewares = $this->kernelMiddlewares($kernel);
         foreach ($kernelMiddlewares as $kernelMiddleware) {
             foreach ($middlewares as $key => $providerName) {

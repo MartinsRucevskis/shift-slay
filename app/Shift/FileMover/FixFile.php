@@ -18,7 +18,7 @@ class FixFile
     {
         echo 'I am fixing '.$this->class->className.PHP_EOL;
         if (isset($this->class->className)) {
-            $classMethods = array_filter($this->class->availableMethods(), fn($method) => $method->className === $this->class->className);
+            $classMethods = array_filter($this->class->availableMethods(), fn ($method) => $method->className === $this->class->className);
             foreach ($classMethods as $classMethod) {
                 try {
                     (new FixMethod($this->class))->fixMethod($classMethod);
@@ -37,10 +37,10 @@ class FixFile
     {
         $updates = PackageUpdates::methodChanges();
         foreach ($this->class->uses as $alias => $package) {
-            if (!isset($updates[$package])) {
+            if (! isset($updates[$package])) {
                 continue;
             }
-            if (!isset($updates[$package]['replaceWith'])) {
+            if (! isset($updates[$package]['replaceWith'])) {
                 continue;
             }
             $this->class->fileContents = str_replace(
