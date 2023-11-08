@@ -12,7 +12,6 @@ class Shift
     /**
      * @var string[]
      */
-
     private array $filesToOverwrite = [
         'web/tests/_bootstrap.php',
         'web/artisan',

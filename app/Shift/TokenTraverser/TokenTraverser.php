@@ -5,7 +5,7 @@ namespace App\Shift\TokenTraverser;
 class TokenTraverser
 {
     /**
-     * @param string[] $tokens
+     * @param  string[]  $tokens
      */
     public function __construct(private readonly array $tokens)
     {
