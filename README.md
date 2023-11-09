@@ -4,7 +4,7 @@ A Tool for automated framework shifts.
 
 
 # Currently supported
-Minimal Lumen 8 - Laravel 8 -migrates mainly config and currently only for specific projects with codeception tests. Requires to fix custom defined configs and other specific Lumen to Laravel changes
+Minimal Lumen 8 to Laravel 8 migration - migrates mainly config and currently only for specific projects with codeception tests. Requires to fix custom defined configs and other specific Lumen to Laravel changes
 
 
 
@@ -28,7 +28,7 @@ Commands for launching migrations
 
 
 ## Important!
-Currently, shift-doesn't support backup files, if using any of the migrations, please be sure that there is a backup project (version control or locally).
+Currently, shift doesn't support backup files, if using any of the migrations, please be sure that there is a backup project (version control or locally).
 
 For now to run migration again, it is required to manually reset project to original state.
 
