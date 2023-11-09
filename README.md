@@ -22,7 +22,7 @@ Commands for launching migrations
 - Pull `shift-slay` locally
 - Edit `.env` file
     -  Set `SHIFT_PROJECT_PATH` to project You want to upgrade
-    - Set `COMPOSER_AUTOLOAD_PATH` to `autoload_classmap` location in projects You want to upgrade
+    - Set `COMPOSER_AUTOLOAD_PATH` to `autoload_classmap` location in project You want to upgrade
     - Set `PLAIN_LARAVEL_PATH` to plain laravel with version you will upgrade to ***To be changed, such that there isn't a need to provide this***
 - Launch migration
 
