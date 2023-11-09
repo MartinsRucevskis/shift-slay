@@ -28,7 +28,7 @@ class ShiftLumen8ToLaravel8 extends Command
      */
     public function handle(): void
     {
-        echo 'I\'m starting to shift, SLAYYY!'.PHP_EOL;
+        echo "I'm starting to shift, SLAYYY!".PHP_EOL;
         config(['shift.command_name' => 'shift:Lumen8ToLaravel8']);
         (new Shift())->run(config('shift.project_path'));
     }

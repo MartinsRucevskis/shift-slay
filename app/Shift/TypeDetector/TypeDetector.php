@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Shift\TypeDetector;
 
 use App\Shift\Objects\FileClass;
+use Exception;
 
 class TypeDetector
 {
@@ -18,11 +19,16 @@ class TypeDetector
      */
     private array $selfReferringTypes = ['self', '$this', 'static'];
 
-    public function methodReturnType(string $class, string $method): ?string
+    public function methodReturnType(?string $class, ?string $method): ?string
     {
-        $file = file_get_contents($this->classMap()[$class]);
-        $methodObject = array_filter((new FileClass($this->classMap()[$class]))->availableMethods(true), fn ($classMethod) => $classMethod->name === $method);
-        $returnType = array_pop($methodObject)->returnType;
+        if (! isset($class) || ! isset($method)) {
+            return null;
+        }
+
+        $file = file_get_contents($this->classMap()[$class]) ?: throw new Exception('Failed to read class: '.$class);
+        $methodObject = array_filter((new FileClass($this->classMap()[$class]))->availableMethods(true), static fn ($classMethod): bool => $classMethod->name === $method);
+        $methoda = array_pop($methodObject);
+        $returnType = $methoda->returnType ?? 'void';
 
         if ($this->isSelfReferringType($returnType)) {
             return $class;
@@ -31,6 +37,7 @@ class TypeDetector
         if ($this->isPrimitiveType($returnType) || $this->isNamespacedType($returnType)) {
             return $returnType;
         }
+
         preg_match_all('/use\s+(.*);/', $file, $matches);
         $uses = $matches[1];
 
@@ -38,6 +45,7 @@ class TypeDetector
             if (substr((string) $use, strrpos((string) $use, '\\') + 1) === $returnType) {
                 return $use;
             }
+
             if (str_contains((string) $use, ' as ')) {
                 [$use, $alias] = explode(' as ', (string) $use);
                 if ($alias === $returnType) {
@@ -45,10 +53,11 @@ class TypeDetector
                 }
             }
         }
+
         preg_match('/namespace\s+(.*);/', $file, $matches);
         $namespace = $matches[1];
 
-        return "$namespace\\$returnType";
+        return sprintf('%s\%s', $namespace, $returnType);
     }
 
     /**

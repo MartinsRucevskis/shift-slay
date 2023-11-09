@@ -17,8 +17,8 @@ class FixFile
     public function fix(): void
     {
         echo 'I am fixing '.$this->class->className.PHP_EOL;
-        if (isset($this->class->className)) {
-            $classMethods = array_filter($this->class->availableMethods(), fn ($method) => $method->className === $this->class->className);
+        if ($this->class->className !== null) {
+            $classMethods = array_filter($this->class->availableMethods(), fn ($method): bool => $method->className === $this->class->className);
             foreach ($classMethods as $classMethod) {
                 try {
                     (new FixMethod($this->class))->fixMethod($classMethod);
@@ -29,6 +29,7 @@ class FixFile
         } else {
             (new FixMethod($this->class))->fix();
         }
+
         $this->replaceImports();
 
     }
@@ -40,15 +41,18 @@ class FixFile
             if (! isset($updates[$package])) {
                 continue;
             }
+
             if (! isset($updates[$package]['replaceWith'])) {
                 continue;
             }
+
             $this->class->fileContents = str_replace(
                 'use '.$this->constructImportString($package, $alias).';',
                 'use '.$this->constructImportString($updates[$package]['replaceWith'], $alias).';',
                 $this->class->fileContents
             );
         }
+
         file_put_contents($this->class->fileLocation, $this->class->fileContents);
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Shift\Objects;
 
+use PhpParser\Node\Expr;
 use PhpParser\Node\Param;
 
 class MethodParam
@@ -14,7 +15,12 @@ class MethodParam
 
     public function __construct(Param $property)
     {
-        $this->name = $property->var->name;
+        $propertyName = $property->var->name ?? '';
+        if ($propertyName instanceof Expr) {
+            $propertyName = $propertyName->getType();
+        }
+
+        $this->name = $propertyName;
         $type = $property->type;
         $name = null;
 
@@ -26,6 +32,7 @@ class MethodParam
                 $name = $parts[0] ?? null;
             }
         }
+
         $this->type = $name;
     }
 }

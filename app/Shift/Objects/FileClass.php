@@ -6,9 +6,10 @@ namespace App\Shift\Objects;
 
 use App\Shift\Enums\VisibilityEnum;
 use App\Shift\TypeDetector\FileAnalyzer;
-use PhpParser\Node\Stmt;
+use Exception;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\ParserFactory;
 
@@ -20,17 +21,20 @@ class FileClass
 
     public ?self $parent = null;
 
-    public ?array $uses;
+    /**
+     * @var array<string, string>
+     */
+    public array $uses = [];
 
     public string $fileContents;
 
     /**
-     * @var \App\Shift\Objects\ClassMethod[]|null
+     * @var \App\Shift\Objects\ClassMethod[]
      */
     public array $methods = [];
 
     /**
-     * @var ClassVariable[]|null
+     * @var ClassVariable[]
      */
     public array $properties = [];
 
@@ -39,8 +43,8 @@ class FileClass
      */
     public function __construct(public string $fileLocation)
     {
-        $this->fileContents = file_get_contents($fileLocation);
-        $classname = $this->className($fileLocation);
+        $this->fileContents = file_get_contents($fileLocation) ?: throw new Exception("Failed to read file: $this->fileLocation");
+        $classname = $this->className();
         $this->namespace = $this->namespace();
         $this->uses = (new FileAnalyzer($this->fileContents))->useStatements();
         // TODO: Move this to function
@@ -57,6 +61,9 @@ class FileClass
         }
     }
 
+    /**
+     * @return \App\Shift\Objects\ClassMethod[]
+     */
     public function availableMethods(bool $includePrivate = true): array
     {
         $availableMethods = $this->methods;
@@ -70,7 +77,10 @@ class FileClass
         return $availableMethods;
     }
 
-    public function availableVariables(bool $includePrivate): ?array
+    /**
+     * @return ClassVariable[]
+     */
+    public function availableVariables(bool $includePrivate): array
     {
         $availableVariables = $this->properties;
         if (! $includePrivate) {
@@ -97,7 +107,7 @@ class FileClass
         return array_pop($method)->returnType ?? '';
     }
 
-    private function className(string $file): ?string
+    private function className(): ?string
     {
         preg_match('/(class|interface) (.+?)[ |\s+|{]/ms', $this->fileContents, $className);
         $nameSpace = $this->namespace();
@@ -107,12 +117,12 @@ class FileClass
                 : $className[2];
         }
 
-        return '';
+        return null;
     }
 
     private function hasParentClass(): bool
     {
-        return preg_match('/class [A-Za-z]* (extends|implements) ([a-zA-Z]*)/', $this->fileContents, $matches);
+        return preg_match('/[class|trait|interface] [A-Za-z]* (extends|implements) ([a-zA-Z\\\\]*)/', $this->fileContents, $matches) === 1;
     }
 
     private function namespacedParentClass(): string
@@ -132,6 +142,9 @@ class FileClass
         return $nameSpace[1] ?? null;
     }
 
+    /**
+     * @return array<string, string>
+     */
     private function classMap(): array
     {
         return require config('shift.composer_path');
@@ -140,16 +153,15 @@ class FileClass
     public function analyzeClass(string $fileContents): void
     {
         $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
-        $nodes = $parser->parse($fileContents)[0];
-        $stmts = $nodes->stmts ?? [];
+        $stmts = $parser->parse($fileContents)[0]->stmts ?? [];
         foreach ($stmts as $node) {
-            if ($node instanceof Class_ || $node instanceof Stmt\Interface_) {
+            if ($node instanceof Class_ || $node instanceof Interface_) {
                 $this->analyzeNode($node);
             }
         }
     }
 
-    private function analyzeNode(Class_|\PhpParser\Node\Stmt\Interface_ $node): void
+    private function analyzeNode(Class_|Interface_ $node): void
     {
         foreach ($node->stmts as $stmt) {
             if ($stmt instanceof Property) {

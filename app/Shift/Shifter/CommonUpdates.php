@@ -20,7 +20,7 @@ class CommonUpdates
                 'helpers' => [
                     'config' => [
                         'params' => [
-                            '\'app.local_time_zone\'' => '\'app.locale\'',
+                            "'app.local_time_zone'" => "'app.locale'",
                         ],
                     ],
                 ],

@@ -19,7 +19,7 @@ class ClassMethod
     public ?string $returnType;
 
     /**
-     * @var MethodParam[]|null
+     * @var MethodParam[]
      */
     public array $params = [];
 
@@ -29,6 +29,7 @@ class ClassMethod
         foreach ($method->params as $param) {
             $this->params[] = new MethodParam($param);
         }
+
         $this->startLine = $method->getStartLine();
         $this->endLine = $method->getEndLine();
         $this->visibility = $this->visibility($method);
@@ -40,6 +41,7 @@ class ClassMethod
         if (preg_match('#^\h*/\*\*(?:\R\h*\*.*)*\R\h*\*/\R(?=.*\bfunction '.preg_quote($this->name).'\b)#m', $file, $matches) === 1) {
             preg_match('/@return\s+?(.+)\n/m', $matches[0], $matches);
         }
+
         if (isset($matches[1]) && $matches[1][0] === '\\') {
             $matches[1] = mb_substr($matches[1], 1);
         }

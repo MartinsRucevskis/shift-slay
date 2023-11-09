@@ -20,9 +20,9 @@ class ClassVariable
 
     public function __construct(Property $property, public string $className, string $fileContents)
     {
-        $this->name = $property->props[0]->name;
+        $this->name = $property->props[0]->name->name;
         $this->visibility = $this->visibility($property);
-        $this->type = $property->type ?? $this->typeFromDocBlock($fileContents);
+        $this->type = $property->type->name ?? $this->typeFromDocBlock($fileContents);
     }
 
     private function visibility(Property|ClassMethod $instance): string
@@ -37,11 +37,12 @@ class ClassVariable
         return $visibility;
     }
 
-    private function typeFromDocBlock(string $fileContents): ?string
+    private function typeFromDocBlock(string $fileContents): string
     {
         if (preg_match('#^\h*/\*\*(?:\R\h*\*.*)*\R\h*\*/\R(?=.*\b'.preg_quote($this->visibility).'\s+(static\s+)?\$'.preg_quote($this->name).'\b)#m', $fileContents, $docBlock)) {
             preg_match('/@var\s+?(.+)\n/m', $docBlock[0], $varType);
         }
+
         if (isset($varType[1]) && $varType[1][0] === '\\') {
             $varType[1] = mb_substr($varType[1], 1);
         }
