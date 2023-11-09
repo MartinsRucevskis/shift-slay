@@ -1,0 +1,12 @@
+parameters:
+    level: 8
+    paths:
+        - app
+    excludePaths:
+        - vendor
+        - storage
+        - tests/
+    ignoreErrors:
+        - '#Parameter \#2 \$className of class App\\Shift\\Objects\\ClassMethod constructor expects string, string\|null given.#'
+        - '#Parameter \#2 \$className of class App\\Shift\\Objects\\ClassVariable constructor expects string, string\|null given.#'
+        - '#Parameter \#3 \$subject of function preg_replace expects array\|string, string\|null given.#'
