@@ -6,6 +6,8 @@ parameters:
         - vendor
         - storage
         - tests/
+        - app/Shift/Rector
+        - app/Shift/LaravelShiftFiles
     ignoreErrors:
         - '#Parameter \#2 \$className of class App\\Shift\\Objects\\ClassMethod constructor expects string, string\|null given.#'
         - '#Parameter \#2 \$className of class App\\Shift\\Objects\\ClassVariable constructor expects string, string\|null given.#'
