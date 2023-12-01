@@ -14,8 +14,8 @@ class Laravel8ToLaravel9 implements BaseShift
     private function runRector(string $directory): void
     {
         $directories = scandir($directory);
-        if(!$directories){
-            throw new \Exception('Couldn\'t open the specified directory : '. $directory);
+        if (! $directories) {
+            throw new \Exception('Couldn\'t open the specified directory : '.$directory);
         }
         $directories = array_filter($directories, fn ($dir) => ! str_contains($dir, '.') && ! str_contains($dir, 'vendor') && is_dir($dir));
         foreach ($directories as &$dir) {

@@ -2,7 +2,6 @@
 
 namespace App\Shift\Shifts;
 
-use Illuminate\Http\FileHelpers;
 use Symfony\Component\Process\Process;
 
 class Laravel9ToLaravel10 implements BaseShift
@@ -16,8 +15,8 @@ class Laravel9ToLaravel10 implements BaseShift
     private function runRector(string $directory): void
     {
         $directories = scandir($directory);
-        if(!$directories){
-            throw new \Exception('Couldn\'t open the specified directory : '. $directory);
+        if (! $directories) {
+            throw new \Exception('Couldn\'t open the specified directory : '.$directory);
         }
         $directories = array_filter($directories, fn ($dir) => ! str_contains($dir, '.') && ! str_contains($dir, 'vendor') && is_dir($dir));
         foreach ($directories as &$dir) {
@@ -32,8 +31,8 @@ class Laravel9ToLaravel10 implements BaseShift
     private function fixConfigApp(string $directory): void
     {
         $appConfig = file_get_contents($directory.'/config/app.php');
-        if(!$appConfig){
-            throw new \Exception('Couldn\'t open the file : ' . $directory.'/config/app.php');
+        if (! $appConfig) {
+            throw new \Exception('Couldn\'t open the file : '.$directory.'/config/app.php');
         }
         $appConfig = preg_replace('/\'providers\' => \[[\s\S]+Illuminate\\\\View\\\\ViewServiceProvider::class,(.+?])/ms', '\'providers\' => \Illuminate\Support\ServiceProvider::defaultProviders()->merge([$1)->toArray()', $appConfig);
 
