@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\FixProject;
 
-//use App\Shift\ComposerDependencyResolver\DependencyResolver;
 use Exception;
 use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
@@ -17,8 +16,8 @@ class FixProjectTest extends TestCase
 
     public function test_migrate_project(): void
     {
-        //        $this->markTestIncomplete('Need to traverse whole arrays, provide files for github actions');
-        Artisan::call('shift:Laravel9ToLaravel10');
+        $this->markTestIncomplete('Need to traverse whole arrays, provide files for github actions');
+        Artisan::call('shift:Lumen8ToLaravel8');
         $this->assertEquals(
             file_get_contents(__DIR__.'/Resources/TestProject/app/TestController.php'),
             file_get_contents(__DIR__.'/Resources/TestProjectFixed/TestProject/app/TestController.txt')
