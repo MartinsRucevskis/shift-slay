@@ -57,36 +57,6 @@ class Lumen8ToLaravel8 implements BaseShift
         }
     }
 
-    private function fixFiles(string $directory): void
-    {
-        $filesAndDirectories = scandir($directory) ?: throw new Exception('Failed to scan directory');
-        unset($filesAndDirectories[array_search('.', $filesAndDirectories, true)]);
-        unset($filesAndDirectories[array_search('..', $filesAndDirectories, true)]);
-
-        if (count($filesAndDirectories) < 1) {
-            return;
-        }
-
-        foreach ($filesAndDirectories as $fileOrDirectory) {
-            $fullPath = $directory.'/'.$fileOrDirectory;
-            if (is_dir($fullPath)) {
-                if (str_contains($fileOrDirectory, 'vendor')) {
-                    continue;
-                }
-
-                $this->fixFiles($fullPath);
-            } elseif (str_contains($fileOrDirectory, '.php') && ! str_contains($fileOrDirectory, 'autoload.php')) {
-                try {
-                    //                    (new FixFile(
-                    //                        new FileClass($fullPath)
-                    //                    ))->fix();
-                } catch (\Exception $exception) {
-                    echo $exception->getMessage().PHP_EOL;
-                }
-            }
-        }
-    }
-
     private function fixConfig(string $directory): void
     {
         $appBoostrap = file_get_contents($directory.'/bootstrap/app.php') ?: throw new Exception(sprintf('Failed to read file: %s/bootstrap/app.php', $directory));
@@ -326,6 +296,9 @@ class Lumen8ToLaravel8 implements BaseShift
     private function runRector(string $directory): void
     {
         $directories = scandir($directory);
+        if(!$directories){
+            throw new \Exception('Couldn\'t open the specified directory : '. $directory);
+        }
         $directories = array_filter($directories, fn ($dir) => ! str_contains($dir, '.') && ! str_contains($dir, 'vendor') && is_dir($dir));
         foreach ($directories as &$dir) {
             $dir = $directory.'\\'.$dir;

@@ -8,13 +8,16 @@ class Laravel9ToLaravel10 implements BaseShift
 {
     public function run(string $directory): void
     {
-        //        $this->runRector($directory);
+        $this->runRector($directory);
         $this->fixConfigApp($directory);
     }
 
     private function runRector(string $directory): void
     {
         $directories = scandir($directory);
+        if(!$directories){
+            throw new \Exception('Couldn\'t open the specified directory : '. $directory);
+        }
         $directories = array_filter($directories, fn ($dir) => ! str_contains($dir, '.') && ! str_contains($dir, 'vendor') && is_dir($dir));
         foreach ($directories as &$dir) {
             $dir = $directory.'\\'.$dir;
