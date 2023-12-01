@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Shift\Shift;
 use App\Shift\Shifts\Laravel9ToLaravel10;
 use Illuminate\Console\Command;
 

@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Shift\Shifts;
 
-use App\Shift\FileMover\FixFile;
-use App\Shift\Objects\FileClass;
+//use App\Shift\FileMover\FixFile;
+//use App\Shift\Objects\FileClass;
 use App\Shift\Shifter\DepreciatedPackages;
-use App\Shift\Shifts\BaseShift;
 use App\Shift\TypeDetector\FileAnalyzer;
 use Exception;
 use Symfony\Component\Process\Process;
@@ -24,9 +23,10 @@ class Lumen8ToLaravel8 implements BaseShift
         $this->addLaravelFiles(app_path('/Shift/LaravelShiftFiles/Laravel8/'), $directory);
         $this->fixConfig($directory);
         $this->runRector($directory);
-        if(config('shift.codeception')) {
+        if (config('shift.codeception')) {
             $this->fixCodeceptionConfig($directory);
         }
+        $this->moveRoutes($directory);
     }
 
     private function addLaravelFiles(string $sourceDirectory, string $destinationDirectory): void
@@ -77,9 +77,9 @@ class Lumen8ToLaravel8 implements BaseShift
                 $this->fixFiles($fullPath);
             } elseif (str_contains($fileOrDirectory, '.php') && ! str_contains($fileOrDirectory, 'autoload.php')) {
                 try {
-                    (new FixFile(
-                        new FileClass($fullPath)
-                    ))->fix();
+                    //                    (new FixFile(
+                    //                        new FileClass($fullPath)
+                    //                    ))->fix();
                 } catch (\Exception $exception) {
                     echo $exception->getMessage().PHP_EOL;
                 }
@@ -322,15 +322,24 @@ class Lumen8ToLaravel8 implements BaseShift
     {
         file_put_contents($directory.'/tests/_bootstrap.php', file_get_contents(app_path('Shift/LaravelShiftFiles/Codeception/testSuiteBootstrap.txt')));
     }
-    private function runRector(string $directory): void{
+
+    private function runRector(string $directory): void
+    {
         $directories = scandir($directory);
-        $directories = array_filter($directories, fn($dir)=>!str_contains($dir, '.') && !str_contains($dir, 'vendor') && is_dir($dir));
+        $directories = array_filter($directories, fn ($dir) => ! str_contains($dir, '.') && ! str_contains($dir, 'vendor') && is_dir($dir));
         foreach ($directories as &$dir) {
-            $dir = $directory . '\\' . $dir;
+            $dir = $directory.'\\'.$dir;
         }
         unset($dir);
-        $process = new Process(['vendor/bin/rector', 'process', ...$directories, '--config', app_path('\Shift\Rector\Lumen8ToLaravel8\rector.php'), '--dry-run']);
+        $process = new Process(['vendor/bin/rector', 'process', ...$directories, '--config', app_path('\Shift\Rector\Lumen8ToLaravel8\rector.php')], null, null, null, 160);
         $process->run();
         echo $process->getOutput();
+    }
+
+    private function moveRoutes(string $directory)
+    {
+        $routes = file_get_contents($directory.'/routes/web.php');
+        file_put_contents($directory.'/routes/api.php', $routes);
+        file_put_contents($directory.'/routes/web.php', '');
     }
 }

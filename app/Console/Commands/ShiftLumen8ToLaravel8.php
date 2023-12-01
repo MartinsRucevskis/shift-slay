@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Shift\Shifts\Lumen8ToLaravel8;
-use App\Shift\Shift;
 use Illuminate\Console\Command;
 
 class ShiftLumen8ToLaravel8 extends Command

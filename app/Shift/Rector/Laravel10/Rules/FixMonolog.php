@@ -22,7 +22,7 @@ class FixMonolog extends AbstractRector
     }
 
     /**
-     * @param Node\Stmt\Class_ $node
+     * @param  Node\Stmt\Class_  $node
      */
     public function refactor(Node $node): ?Node
     {
@@ -33,7 +33,7 @@ class FixMonolog extends AbstractRector
                     foreach ($method->params as $param) {
                         $param->type = new Identifier('\Monolog\LogRecord');
                     }
-                    $this->traverseNodesWithCallable((array)$method->stmts, function (Node $node): ?Node {
+                    $this->traverseNodesWithCallable((array) $method->stmts, function (Node $node): ?Node {
                         if ($node instanceof Node\Expr\ArrayDimFetch) {
                             $dim = $node->dim;
                             if ($dim instanceof Node\Scalar\String_) {
@@ -49,6 +49,7 @@ class FixMonolog extends AbstractRector
                 }
             }
         }
+
         return $node;
     }
 
@@ -56,7 +57,7 @@ class FixMonolog extends AbstractRector
     {
         return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
             new CodeSample(
-            // code before
+                // code before
                 'public function handle(array $record) { return $record[\'context\']; }',
                 // code after
                 'public function handle(\Monolog\LogRecord $record) { return $record->context; }'

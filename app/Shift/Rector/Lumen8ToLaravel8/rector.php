@@ -2,10 +2,8 @@
 
 declare(strict_types=1);
 
-use Rector\CodeQuality\Rector\Class_\InlineConstructorDefaultToPropertyRector;
 use Rector\Config\RectorConfig;
-use Rector\Set\ValueObject\LevelSetList;
-use App\Shift\Rector\Laravel10\Rules\FixMonolog;
+use RectorLaravel\Set\LaravelLevelSetList;
 
 return static function (RectorConfig $rectorConfig): void {
 
@@ -15,14 +13,12 @@ return static function (RectorConfig $rectorConfig): void {
         'Pearl\RequestValidate\RequestAbstract' => 'Illuminate\Foundation\Http\FormRequest',
         'Dingo\Api\Provider\LumenServiceProvider' => 'Dingo\Api\Provider\LaravelServiceProvider',
         'Laravel\Lumen\Console\Kernel' => 'Illuminate\Foundation\Console\Kernel',
-        'Laravel\Lumen\Routing\Controller' => 'Illuminate\Routing\Controller'
+        'Laravel\Lumen\Routing\Controller' => 'Illuminate\Routing\Controller',
+        'Laravel\Lumen\Providers\EventServiceProvider' => 'Illuminate\Foundation\Support\Providers\EventServiceProvider',
     ]);
+    $rectorConfig->removeUnusedImports();
 
-    // register a single rule
-//    $rectorConfig->rule(FixMonolog::class);
-
-    // define sets of rules
     $rectorConfig->sets([
-        \RectorLaravel\Set\LaravelLevelSetList::UP_TO_LARAVEL_80
+        LaravelLevelSetList::UP_TO_LARAVEL_80,
     ]);
 };
