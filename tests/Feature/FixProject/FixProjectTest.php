@@ -14,9 +14,6 @@ class FixProjectTest extends TestCase
         parent::setUp();
     }
 
-    /**
-     * A basic test example.
-     */
     public function test_migrate_project(): void
     {
         $this->markTestIncomplete('Need to traverse whole arrays, provide files for github actions');
