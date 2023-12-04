@@ -14,9 +14,14 @@ class FixProjectTest extends TestCase
         parent::setUp();
     }
 
+    #[\PHPUnit\Framework\Attributes\TestWith()]
     public function test_migrate_project(): void
     {
         $this->markTestIncomplete('Need to traverse whole arrays, provide files for github actions');
+        $response = $this->getJson();
+        $response->assertTemporaryRedirect();
+
+        $response->assertStatus();
         Artisan::call('shift:Lumen8ToLaravel8');
         $this->assertEquals(
             file_get_contents(__DIR__.'/Resources/TestProject/app/TestController.php'),

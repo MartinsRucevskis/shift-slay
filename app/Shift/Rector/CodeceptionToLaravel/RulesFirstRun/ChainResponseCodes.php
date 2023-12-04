@@ -1,14 +1,9 @@
 <?php
 
+namespace App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun;
 
-namespace App\Shift\Rector\CodeceptionToLaravel\Rules;
-
-use Illuminate\Database\Query\Expression;
 use PhpParser\Node;
-use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\MethodCall;
-use PhpParser\Node\Expr\Variable;
-use PHPStan\Type\ObjectType;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -16,7 +11,8 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 // Will generate diff as (something)->chainedCall(), but actually will be converted to something->chainedCall(), due to afterTraverse regex modification
 class ChainResponseCodes extends AbstractRector
 {
-    private array $sendMethods = ['sendGET', 'sendPOST', 'sendPATCH', 'sendDELETE', 'getJson', 'postJson', 'patchJson', 'deleteJson'];
+    private array $sendMethods = ['sendGET', 'sendPOST', 'sendPATCH', 'sendDELETE', 'getJson', 'postJson', 'patchJson', 'deleteJson', 'sendGet', 'sendPatch', 'sendDelete', 'sendPost'];
+
     private array $codes = [
         'CONTINUE' => 100,
         'PROCESSING' => 102,
@@ -79,7 +75,7 @@ class ChainResponseCodes extends AbstractRector
         'INSUFFICIENT_STORAGE' => 507,
         'LOOP_DETECTED' => 508,
         'NOT_EXTENDED' => 510,
-        'NETWORK_AUTHENTICATION_REQUIRED' => 511
+        'NETWORK_AUTHENTICATION_REQUIRED' => 511,
     ];
 
     public function getNodeTypes(): array
@@ -89,18 +85,18 @@ class ChainResponseCodes extends AbstractRector
 
     public function refactor(Node $node): ?Node
     {
-        $methodStmts = array_filter($node->stmts, function ($stmt){
-            return $stmt->expr instanceof MethodCall;
+        $methodStmts = array_filter($node->stmts ?? [], function ($stmt) {
+            return isset($stmt->expr) && $stmt->expr instanceof MethodCall;
         });
         $sendMethod = null;
         /** @var MethodCall $stmnt */
-        foreach ($methodStmts as $key => $stmnt){
-            if(in_array($stmnt->expr?->name?->name, $this->sendMethods)){
+        foreach ($methodStmts as $key => $stmnt) {
+            if (in_array($stmnt->expr?->name?->name, $this->sendMethods)) {
                 $sendMethod = $key;
             }
-            if($stmnt->expr?->name?->name === 'seeResponseCodeIs') {
+            if ($stmnt->expr?->name?->name === 'seeResponseCodeIs') {
                 if (isset($sendMethod)) {
-                    if($stmnt->expr->args[0]->value instanceof Node\Scalar\LNumber){
+                    if ($stmnt->expr->args[0]->value instanceof Node\Scalar\LNumber) {
                         $code = $stmnt->expr->args[0]->value->value;
                     } else {
                         $code = $this->codes[$stmnt->expr->args[0]->value->name->name];
@@ -115,20 +111,21 @@ class ChainResponseCodes extends AbstractRector
         return $node;
     }
 
-
     public function afterTraverse(array $nodes)
     {
-        $file = preg_replace('#\((\$response = (\$I|\$this)->(getJson|postJson|patchJson|deleteJson)\([\s\S]*?\))\)->#ms', '$1->', $this->file->getFileContent());
-        file_put_contents($this->file->getFilePath(), $file);
+        if (! in_array('--dry-run', $_SERVER['argv'])) {
+            $file = preg_replace('#\((\$response = (\$I|\$this)->(getJson|postJson|patchJson|deleteJson)\([\s\S]*?\))\)->#ms', '$1->', $this->file->getFileContent());
+            file_put_contents($this->file->getFilePath(), $file);
+        }
 
-        return null;
+        return parent::afterTraverse($nodes);
     }
 
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
             new CodeSample(
-            // code before
+                // code before
                 'public function handle(array $record) { return $record[\'context\']; }',
                 // code after
                 'public function handle(\Monolog\LogRecord $record) { return $record->context; }'

@@ -1,9 +1,7 @@
 <?php
 
+namespace App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun;
 
-namespace App\Shift\Rector\CodeceptionToLaravel\Rules;
-
-use Illuminate\Database\Query\Expression;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\MethodCall;
@@ -18,9 +16,13 @@ class RenameApiTesterMethod extends AbstractRector
     private array $methodRenames = [
         'haveHttpHeader' => 'withHeader',
         'sendGET' => 'getJson',
+        'sendGet' => 'getJson',
         'sendPOST' => 'postJson',
+        'sendPost' => 'postJson',
         'sendPATCH' => 'patchJson',
+        'sendPatch' => 'patchJson',
         'sendDELETE' => 'deleteJson',
+        'sendDelete' => 'deleteJson',
     ];
 
     public function getNodeTypes(): array
@@ -30,15 +32,15 @@ class RenameApiTesterMethod extends AbstractRector
 
     public function refactor(Node $node): ?Node
     {
-        if (!$this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, new ObjectType('ApiTester'))) {
+        if (! $this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, new ObjectType('ApiTester'))) {
             return null;
         }
         $rename = $this->methodRenames[$this->getName($node->name)] ?? null;
-        if (!isset($rename)) {
+        if (! isset($rename)) {
             return null;
         }
         $node->name = new Node\Identifier($rename);
-        if(in_array($node->name, ['getJson', 'postJson', 'patchJson', 'deleteJson'])){
+        if (in_array($node->name, ['getJson', 'postJson', 'patchJson', 'deleteJson'])) {
             /** @var MethodCall $node */
             $variable = new Variable('response');
             $node = new Assign($variable, $node);
@@ -47,13 +49,11 @@ class RenameApiTesterMethod extends AbstractRector
         return $node;
     }
 
-
-
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
             new CodeSample(
-            // code before
+                // code before
                 'public function handle(array $record) { return $record[\'context\']; }',
                 // code after
                 'public function handle(\Monolog\LogRecord $record) { return $record->context; }'

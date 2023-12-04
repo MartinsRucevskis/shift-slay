@@ -1,47 +1,35 @@
 <?php
 
+namespace App\Shift\Rector\CodeceptionToLaravel\RulesSecondRun;
 
-namespace App\Shift\Rector\CodeceptionToLaravel\Rules;
-
-use Illuminate\Database\Query\Expression;
 use PhpParser\Node;
-use PhpParser\Node\Expr\Assign;
-use PhpParser\Node\Expr\MethodCall;
-use PhpParser\Node\Expr\Variable;
-use PHPStan\Type\ObjectType;
+use PhpParser\Node\Name;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-class RefactorGetResponse extends AbstractRector
+class RefactorClassToPhpUnitTestCase extends AbstractRector
 {
-
     public function getNodeTypes(): array
     {
-        return [Node\Expr\MethodCall::class];
+        return [Node\Stmt\Class_::class];
     }
 
     public function refactor(Node $node): ?Node
     {
-        if (!$this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, new ObjectType('ApiTester'))) {
-            return null;
+        if (str_ends_with($node->name->name, 'Cest')) {
+            $node->name->name = str_replace('Cest', 'Test', $node->name->name);
+            $node->extends = new Name('Tests\TestCase');
         }
-        $rename = $this->methodRenames[$this->getName($node->name)] ?? null;
-        if ($this->getName($node->name) !== 'grabResponse') {
-            return null;
-        }
-        $node->var = new Variable('response');
-        $node->name->name = 'getContent';
 
         return $node;
     }
-
 
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
             new CodeSample(
-            // code before
+                // code before
                 'public function handle(array $record) { return $record[\'context\']; }',
                 // code after
                 'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
