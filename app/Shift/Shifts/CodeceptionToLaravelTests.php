@@ -17,8 +17,8 @@ class CodeceptionToLaravelTests implements BaseShift
     public function run(string $directory): void
     {
         $this->addTestFiles(app_path('/Shift/LaravelShiftFiles/LaravelTests/'), $directory);
-        $this->runRector($directory);
-        $this->fixTestFileFormatting($directory);
+//        $this->runRector($directory);
+        $this->fixTestFileFormatting('C:\Users\martins.rucevskis\projects\product-server\web\tests\\');
     }
 
     private function addLaravelFiles(string $sourceDirectory, string $destinationDirectory): void
@@ -78,11 +78,20 @@ class CodeceptionToLaravelTests implements BaseShift
                 continue;
             }
 
-            if (is_dir("$sourceDirectory/$file") === true) {
-                $this->fixTestFileFormatting("$sourceDirectory/$file");
+            if (is_dir($sourceDirectory.$file) === true) {
+                if(str_ends_with($sourceDirectory.$file, 'tests\api')){
+                    shell_exec('git -C '.$sourceDirectory.' mv ' . $sourceDirectory.$file . ' '.$sourceDirectory.'Feature');
+                    $file = 'Feature';
+                }
+                if($file === 'unit'){
+                    shell_exec('git -C '.$sourceDirectory.'../'.' mv ' . $sourceDirectory.$file . ' '.$sourceDirectory.'Unit');
+                    $file = 'Unit';
+                }
+                $this->fixTestFileFormatting($sourceDirectory.$file.'\\');
             } else {
                 if (str_ends_with($file, 'Cest.php')) {
-                    rename($sourceDirectory.'/'.$file, str_replace('Cest.php', 'Test.php', $file));
+                    $renamedFile = str_replace('Cest.php', 'Test.php', $file);
+                    shell_exec('git -C '.$sourceDirectory.' mv ' . $sourceDirectory.$file . ' '.$sourceDirectory.$renamedFile);
                 }
             }
         }
