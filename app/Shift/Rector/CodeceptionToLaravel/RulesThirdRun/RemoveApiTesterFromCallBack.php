@@ -1,42 +1,34 @@
 <?php
 
-namespace App\Shift\Rector\CodeceptionToLaravel\RulesSecondRun;
+namespace App\Shift\Rector\CodeceptionToLaravel\RulesThirdRun;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr\PropertyFetch;
-use PhpParser\Node\Expr\Variable;
-use PHPStan\Type\ObjectType;
+use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Identifier;
+use PhpParser\Node\Scalar\LNumber;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 // Will generate diff as (something)->chainedCall(), but actually will be converted to something->chainedCall(), due to afterTraverse regex modification
-class ReplaceApiTesterObject extends AbstractRector
+class RemoveApiTesterFromCallBack extends AbstractRector
 {
     public function getNodeTypes(): array
     {
-        return [PropertyFetch::class, Node\Expr\MethodCall::class];
+        return [Node\Expr\Closure::class];
     }
 
+    /** @param Node\Expr\Closure $node */
     public function refactor(Node $node): ?Node
     {
-        if($node instanceof Node\Expr\MethodCall){
-            if (str_ends_with($this->file->getFilePath(), 'Cest.php') && $node->var->name === 'I') {
-                $node->var->name = 'this';
-                return $node;
+        $uses = $node->uses;
+        foreach ($uses as $key => $use){
+            if($this->isName($use->var, 'I')){
+                unset($uses[$key]);
             }
         }
-//        if (! $this->isName($node, 'I')) {
-//            return null;
-//        }
-        if (! $this->isObjectType($node, new ObjectType('ApiTester'))) {
-            return null;
-        }
-        if (! str_ends_with($this->file->getFilePath(), 'Cest.php')) {
-            return new PropertyFetch(new Variable('this'), 'testCase');
-        }
 
-        return new Variable('this');
+        return $node;
     }
 
     public function getRuleDefinition(): RuleDefinition

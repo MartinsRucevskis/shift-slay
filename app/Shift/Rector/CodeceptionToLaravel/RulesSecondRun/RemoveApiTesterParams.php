@@ -28,9 +28,9 @@ class RemoveApiTesterParams extends AbstractRector
         foreach ($params as $key => $param) {
             if ($this->isObjectType($param, new ObjectType('ApiTester'))) {
                 if (str_ends_with($this->file->getFilePath(), 'Cest.php')) {
-                    $this->traverseNodesWithCallable($node->stmts, function ($stmnt) use ($param) {
+                    $this->traverseNodesWithCallable($node->stmts, function ($stmnt) use ($params, $param, $key) {
                         if ($stmnt instanceof Variable && $this->isName($stmnt, $this->getName($param))) {
-                            return new Variable('this');
+                            unset($params[$key]);
                         }
                     });
                     unset($params[$key]);
@@ -40,7 +40,7 @@ class RemoveApiTesterParams extends AbstractRector
                             return new Variable('testCase');
                         }
                     });
-                    $params[$key]->var->name = 'testCase';
+                    $params[$key] = new Node\Param(new Variable('testCase'), type: new Node\Name('Tests\TestCase'));
                 }
             }
         }

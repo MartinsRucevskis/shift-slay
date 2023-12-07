@@ -1,36 +1,33 @@
 <?php
 
-namespace App\Shift\Rector\CodeceptionToLaravel\RulesSecondRun;
+namespace App\Shift\Rector\CodeceptionToLaravel\RulesThirdRun;
 
 use PhpParser\Builder\Param;
 use PhpParser\Node;
-use PhpParser\Node\Expr\PropertyFetch;
-use PHPStan\Type\ObjectType;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-class RefactorApiTesterToTestCase extends AbstractRector
+class RemoveSelfFromClosure extends AbstractRector
 {
     public function getNodeTypes(): array
     {
-        return [Node\Stmt\Property::class];
+        return [Node\Expr\Closure::class];
     }
 
     /**
-     * @param  PropertyFetch  $node
+     * @param  Closure  $node
      */
     public function refactor(Node $node): ?Node
     {
-        if (str_ends_with($this->file->getFilePath(), 'Cest.php')) {
+        if (! str_ends_with($this->file->getFilePath(), 'Cest.php')) {
             return null;
         }
-
-        if (! $this->isObjectType($node, new ObjectType('ApiTester'))) {
-            return null;
+        foreach ($node->uses as $key => $use) {
+            if ($this->isName($use->var, 'this')) {
+                unset($node->uses[$key]);
+            }
         }
-        $node->type = new \PhpParser\Node\Name('Tests\TestCase');
-        $node->props[0]->name = new \PhpParser\Node\VarLikeIdentifier('testCase');
 
         return $node;
     }

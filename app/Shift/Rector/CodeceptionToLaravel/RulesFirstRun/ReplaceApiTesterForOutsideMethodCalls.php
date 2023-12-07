@@ -1,35 +1,36 @@
 <?php
 
-namespace App\Shift\Rector\CodeceptionToLaravel\RulesSecondRun;
+namespace App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun;
 
-use PhpParser\Builder\Param;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Stmt\ClassMethod;
+use PHPStan\Type\ObjectType;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 // Will generate diff as (something)->chainedCall(), but actually will be converted to something->chainedCall(), due to afterTraverse regex modification
-class ChainMockMethods extends AbstractRector
+class ReplaceApiTesterForOutsideMethodCalls extends AbstractRector
 {
     public function getNodeTypes(): array
     {
-        return [Node\Stmt\ClassMethod::class];
+        return [Node\Expr\New_::class];
     }
 
-    /**
-     * @param  Node\Stmt\Class_  $node
-     */
+    /** @param  Node\Expr\New_ $node */
     public function refactor(Node $node): ?Node
     {
-        if (str_ends_with($node->name->name, 'Cest') || str_ends_with($node->name->name, 'Test')) {
+        if(!str_ends_with($this->file->getFilePath(), 'Cest.php')){
             return null;
         }
-        $this->traverseNodesWithCallable($node->stmts, function (Node $node) {
-            if ($node instanceof Variable) {
-                return $node;
+        $methodCallArgs = $node->getArgs();
+        foreach ($methodCallArgs as $key => $arg) {
+            if ($this->isName($arg->value, 'I')) {
+                $methodCallArgs[$key] = new Node\Arg(new Variable('this'));
             }
-        });
+        }
+        $node->args = $methodCallArgs;
 
         return $node;
     }

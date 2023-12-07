@@ -4,9 +4,13 @@ namespace Tests\Support\HttpMock;
 
 use Illuminate\Http\Client\Request;
 
+use function Safe\preg_match;
+
 class MockResponseConditions
 {
     private ?string $bodyContains = null;
+
+    private ?string $bodyContainsRegex = null;
 
     private string $requestMethod = '';
 
@@ -49,6 +53,13 @@ class MockResponseConditions
         return $this;
     }
 
+    public function bodyIsContainingRegex(string $regex): self
+    {
+        $this->bodyContainsRegex = $regex;
+
+        return $this;
+    }
+
     public function then(): HttpMockResponse
     {
         return $this->response;
@@ -57,6 +68,31 @@ class MockResponseConditions
     public function conditionsMatchRequest(Request $request): bool
     {
         return ($this->requestMethod === '' || $request->method() === $this->requestMethod)
-            && ($this->bodyContains === null || str_contains($request->body(), $this->bodyContains));
+            && $this->matchBody($request->body());
+    }
+
+    private function matchBody(string $body)
+    {
+        $matches = true;
+        if (isset($this->bodyContains)) {
+            $matches = str_contains($body, $this->bodyContains);
+        } elseif (isset($this->bodyContainsRegex)) {
+            $matches = preg_match($this->bodyContainsRegex, $body) === 1;
+        }
+
+        return $matches;
+    }
+
+    public function httpMock(string $url = '*'): HttpMock
+    {
+        foreach ($this->mocks as $mock) {
+            if ($mock->url() === $url) {
+                return $mock;
+            }
+        }
+        $mock = new HttpMock($url);
+        $this->mocks[] = $mock;
+
+        return $mock;
     }
 }

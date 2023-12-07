@@ -3,29 +3,14 @@
 namespace App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\MethodCall;
-use PhpParser\Node\Expr\Variable;
 use PHPStan\Type\ObjectType;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-class RenameApiTesterMethod extends AbstractRector
+class RefactorGrabFromDatabase extends AbstractRector
 {
-    private array $methodRenames = [
-        'haveHttpHeader' => 'withHeader',
-        'sendGET' => 'getJson',
-        'sendGet' => 'getJson',
-        'sendPOST' => 'postJson',
-        'sendPost' => 'postJson',
-        'sendPATCH' => 'patchJson',
-        'sendPatch' => 'patchJson',
-        'sendDELETE' => 'deleteJson',
-        'sendDelete' => 'deleteJson',
-        'canSeeInDatabase' => 'assertDatabaseHas',
-        'haveInDatabase' => 'assertDatabaseHas',
-    ];
     //        $record = $this->grabFromDatabase('logs', 'message'); japarveido
 
     public function getNodeTypes(): array
@@ -38,15 +23,17 @@ class RenameApiTesterMethod extends AbstractRector
         if (! $this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, new ObjectType('ApiTester'))) {
             return null;
         }
-        $rename = $this->methodRenames[$this->getName($node->name)] ?? null;
-        if (! isset($rename)) {
+        if ($this->getName($node->name) !== 'grabFromDatabase') {
             return null;
         }
-        $node->name = new Node\Identifier($rename);
-        if (in_array($node->name, ['getJson', 'postJson', 'patchJson', 'deleteJson'])) {
-            /** @var MethodCall $node */
-            $variable = new Variable('response');
-            $node = new Assign($variable, $node);
+        $methodArguments = $node->args;
+        $method = new Node\Expr\StaticCall(new Node\Name('Illuminate\Support\Facades\DB'), 'table', [$methodArguments[0]]);
+        if (count($methodArguments) === 2) {
+            return new MethodCall($method, 'get', [$methodArguments[1]]);
+        } else {
+            $method = new MethodCall($method, 'where', [$methodArguments[2]]);
+
+            return new MethodCall($method, 'get', [$methodArguments[1]]);
         }
 
         return $node;

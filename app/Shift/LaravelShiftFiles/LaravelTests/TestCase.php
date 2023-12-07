@@ -2,27 +2,29 @@
 
 namespace Tests;
 
+use Database\Seeders\TestSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
-use Tests\Support\HttpMock\HttpMock;
-use Tests\Support\HttpMock\HttpMockResponse;
+use Tests\Support\HttpMock\HttpStatelessMock;
 
 use function Safe\file_get_contents;
 
 abstract class TestCase extends BaseTestCase
 {
     use CreatesApplication;
+    use HttpStatelessMock;
     use RefreshDatabase;
 
-    protected string $seeder = '';
+    protected string $seeder = TestSeeder::class;
 
-    public function httpMock(string $url = '*'): HttpMock
+    protected function tearDown(): void
     {
-        return new HttpMock($url);
+        $this->resetMock();
+        parent::tearDown();
     }
 
     public function jsonFileContentAsArray(string $fileName): array
@@ -56,13 +58,14 @@ abstract class TestCase extends BaseTestCase
         ), true);
     }
 
-    public function outgoingRequest(string $url): Request
+    public function outgoingRequest(string $url, string $method = null, string $body = null, bool $bodyMatchExact = false): Request
     {
-        return $this->outgoingRequests($url)->first()[0];
+        return $this->outgoingRequests($url)->first();
     }
 
     public function outgoingRequests(string $url, string $method = null, string $body = null, bool $bodyMatchExact = false): Collection
     {
+        /** @var Collection $traffic */
         return Http::recorded(function (Request $request, Response $response) use ($url, $method, $body, $bodyMatchExact) {
             return str_contains($request->toPsrRequest()->getUri()->getPath(), $url)
                 && (! isset($method) || $request->toPsrRequest()->getMethod() === $method)
@@ -71,12 +74,9 @@ abstract class TestCase extends BaseTestCase
                     || (! $bodyMatchExact && str_contains($request->toPsrRequest()->getBody()->getContents(), $body))
                 )
                 );
+        })->map(function ($item) {
+            return $item[0];
         })->values();
-    }
-
-    public static function httpMockResponse(): HttpMockResponse
-    {
-        return new HttpMockResponse();
     }
 
     protected function mockActiveTokenResponse(): void

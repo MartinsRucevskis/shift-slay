@@ -2,35 +2,30 @@
 
 namespace App\Shift\Rector\CodeceptionToLaravel\RulesSecondRun;
 
-use PhpParser\Builder\Param;
 use PhpParser\Node;
-use PhpParser\Node\Expr\PropertyFetch;
-use PHPStan\Type\ObjectType;
+use PhpParser\Node\Name;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-class RefactorApiTesterToTestCase extends AbstractRector
+class RenameBeforeMethod extends AbstractRector
 {
     public function getNodeTypes(): array
     {
-        return [Node\Stmt\Property::class];
+        return [Node\Stmt\ClassMethod::class];
     }
 
-    /**
-     * @param  PropertyFetch  $node
-     */
     public function refactor(Node $node): ?Node
     {
-        if (str_ends_with($this->file->getFilePath(), 'Cest.php')) {
-            return null;
-        }
+        if ($this->getName($node) === '_before') {
+            $stmts[] = new Node\Stmt\Expression(new Node\Expr\StaticCall(new Name('Parent'), 'setUp'));
+            $stmts = array_merge($stmts, $node->stmts);
+            $node->stmts = $stmts;
+            $node->flags = \Rector\Core\ValueObject\Visibility::PROTECTED;
+            $node->name->name = 'setUp';
+            $node->params = [];
 
-        if (! $this->isObjectType($node, new ObjectType('ApiTester'))) {
-            return null;
         }
-        $node->type = new \PhpParser\Node\Name('Tests\TestCase');
-        $node->props[0]->name = new \PhpParser\Node\VarLikeIdentifier('testCase');
 
         return $node;
     }

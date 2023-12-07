@@ -5,36 +5,69 @@ namespace App\Shift\Rector\CodeceptionToLaravel\RulesSecondRun;
 use PhpParser\Builder\Param;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Variable;
+use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-// Will generate diff as (something)->chainedCall(), but actually will be converted to something->chainedCall(), due to afterTraverse regex modification
 class ReplaceOutgoingRequestsWithOutgoingRequest extends AbstractRector
 {
+    // Semi-reliable
+    public function __construct(private BetterNodeFinder $nodeFinder)
+    {
+    }
+
     public function getNodeTypes(): array
     {
         return [Node\Stmt\ClassMethod::class];
     }
 
     /**
-     * @param  Node\Stmt\Class_  $node
+     * @param  Node\Stmt\ClassMethod  $node
      */
     public function refactor(Node $node): ?Node
     {
-        if (str_ends_with($node->name->name, 'Cest') || str_ends_with($node->name->name, 'Test')) {
-            $this->traverseNodesWithCallable($node->stmts, function (Node $node) {
-                if ($node instanceof Variable && $this->getName($node) === 'I') {
-                    return $node;
+        $this->traverseNodesWithCallable($node, function ($stmnt) use ($node) {
+            if ($stmnt instanceof Node\Expr\Assign && $stmnt->expr instanceof Node\Expr\MethodCall) {
+                if ($this->getName($stmnt->expr->name) === 'outgoingRequests' && $stmnt->expr->var->name === 'this') {
+                    $variableName = $this->getName($stmnt->var);
+                    $isUsedAsVariable = $this->nodeFinder->find($node, function ($stmt) use ($variableName) {
+                        return $stmt instanceof Variable && $this->getName($stmt) === $variableName;
+                    });
+
+                    $arrayAccess = $this->nodeFinder->findInstancesOf($node, [Node\Expr\ArrayDimFetch::class]);
+                    if (count($isUsedAsVariable) - count($arrayAccess) <= 1) {
+                        $onlyFirstElement = array_filter($arrayAccess, function ($arrayDim) use ($variableName) {
+                                return $arrayDim->var->name === $variableName && $arrayDim->dim->value !== 0;
+                            }) === [];
+                        if ($onlyFirstElement && count($arrayAccess) > 0) {
+                            $stmnt->expr->name->name = 'outgoingRequest';
+                            $this->traverseNodesWithCallable($node, function ($stmnt) use ($variableName) {
+                                if ($stmnt instanceof Node\Expr\ArrayDimFetch && $stmnt->var->name === $variableName) {
+                                    return new Variable($variableName);
+                                }
+                            });
+                            $this->traverseNodesWithCallable($node, function ($stmnt) use ($variableName) {
+                                if ($stmnt instanceof Node\Expr\PropertyFetch && $stmnt->var->name === $variableName) {
+                                    return new Node\Expr\MethodCall($stmnt->var, 'body', []);
+                                }
+                            });
+                        }
+                        return $stmnt;
+                    }
+                    $this->traverseNodesWithCallable($node, function ($stmnt) use ($variableName) {
+                        if ($stmnt instanceof Node\Expr\PropertyFetch && $stmnt->var->name === $variableName) {
+                            return new Node\Expr\MethodCall($stmnt->var, 'body', []);
+                        }
+                        if ($stmnt->var instanceof Node\Expr\ArrayDimFetch && $this->getName($stmnt->var->var) === $variableName) {
+                            return new Node\Expr\MethodCall($stmnt->var, 'body', []);
+                        }
+                    });
                 }
-            });
-        } else {
-            $this->traverseNodesWithCallable($node->stmts, function (Node $node) {
-                if ($node instanceof Variable && $this->getName($node) === 'I') {
-                    return $node;
-                }
-            });
-        }
+            }
+
+            return $stmnt;
+        });
 
         return $node;
     }
@@ -44,9 +77,35 @@ class ReplaceOutgoingRequestsWithOutgoingRequest extends AbstractRector
         return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
             new CodeSample(
                 // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
+                '
+                use Tests\TestCase;
+
+                class exampleClass extends TestCase
+                {
+                    public function someMethod(){
+                        $requests = $this->outgoingRequests();
+                        $this->assertEquals(\'something\', $requests[0]->body());
+                        $this->assertEquals(\'something\', $requests[0]->body());
+                        $requests = $this->outgoingRequests();
+                        $this->assertEquals(\'something\', $requests[0]->body());
+                        $this->assertEquals(\'something\', $requests[1]->body());
+                    }
+                ',
                 // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+                '
+                use Tests\TestCase;
+
+                class exampleClass extends TestCase
+                {
+                    public function someMethod(){
+                        $requests = $this->outgoingRequest();
+                        $this->assertEquals(\'something\', $requests->body());
+                        $this->assertEquals(\'something\', $requests->body());
+                        $requests = $this->outgoingRequests();
+                        $this->assertEquals(\'something\', $requests[0]->body());
+                        $this->assertEquals(\'something\', $requests[1]->body());
+                    }
+                '
             ),
         ]);
     }
