@@ -9,11 +9,14 @@ use App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun\ChainResponseCodes;
 use App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun\ExampleToTestWithDocs;
 use App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun\RefactorGetResponse;
 use App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun\RefactorGrabFromDatabase;
+use App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun\RefactorJsonFilesToArray;
 use App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun\RefactorMockAccess;
 use App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun\RefactorMockCreation;
+use App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun\RefactorToResponseMethods;
 use App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun\RenameApiTesterMethod;
 use App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun\ReplaceApiTesterForOutsideMethodCalls;
 use App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun\ResponseCodesToAsserts;
+use App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun\StaticStatusCodeToInt;
 use Rector\Config\RectorConfig;
 
 return static function (RectorConfig $rectorConfig): void {
@@ -28,6 +31,9 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->rule(AddTestAttributeForTests::class);
     $rectorConfig->rule(RefactorGrabFromDatabase::class);
     $rectorConfig->rule(ReplaceApiTesterForOutsideMethodCalls::class);
+    $rectorConfig->rule(StaticStatusCodeToInt::class);
+    $rectorConfig->rule(RefactorJsonFilesToArray::class);
+    $rectorConfig->rule(RefactorToResponseMethods::class);
     //    $rectorConfig->rule(AddResponseAsParam::class); Need to improve
     //    $rectorConfig->rule(AddResponseAsParamWhenCaller::class) Add to second run and check if method has it as a caller
 

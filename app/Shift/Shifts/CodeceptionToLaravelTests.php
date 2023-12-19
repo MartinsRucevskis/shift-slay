@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Shift\Shifts;
 
 use Exception;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use PHPSQLParser\PHPSQLParser;
 use Symfony\Component\Process\Process;
@@ -15,36 +16,37 @@ class CodeceptionToLaravelTests implements BaseShift
      * @var string[]
      */
     public array $overLappingFiles = [];
+    public array $nameSpaceChanges = [];
 
     public function run(string $directory): void
     {
-        $this->addTestFiles(app_path('/Shift/LaravelShiftFiles/LaravelTests/'), $directory);
-        $this->runRector($directory);
-        $this->fixTestFileFormatting('C:\Users\martins.rucevskis\projects\product-server\web\tests\\');
-        $this->dumpToSeeders();
+        $testDirectory = $directory. '\tests';
+        $this->refactorTests($testDirectory);
+        $this->fixTestFileFormatting($testDirectory.'\\');
+        $this->dumpToSeeders($directory);
+        $this->addTestFiles(app_path('/Shift/LaravelShiftFiles/LaravelTests/'), $testDirectory);
+        $this->fixNameSpaces($testDirectory);
     }
 
     private function addTestFiles(string $app_path, string $directory)
     {
-        File::copyDirectory($app_path, $directory.'/tests');
+        File::copyDirectory($app_path, $directory);
     }
 
-    private function runRector($directory)
+    private function refactorTests($directory)
     {
-        $process = new Process(['vendor/bin/rector', 'process', $directory.'\tests\\', '--config', app_path('\Shift\Rector\CodeceptionToLaravel\rectorFirstRun.php'), '--debug'], null, null, null, 300);
-        $process->run();
+        $directory .= '\\';
+        $firstRun = $this->runRector(app_path('\Shift\Rector\CodeceptionToLaravel\rectorFirstRun.php'), $directory);
         echo 'Rector Changes from First run : '.PHP_EOL;
-        echo $process->getOutput();
+        echo $firstRun;
 
-        $process = new Process(['vendor/bin/rector', 'process', $directory.'\tests\\', '--config', app_path('\Shift\Rector\CodeceptionToLaravel\rectorSecondRun.php'), '--debug'], null, null, null, 300);
-        $process->run();
-        echo 'Rector Changes from Second run : '.PHP_EOL;
-        echo $process->getOutput();
+        $secondRun = $this->runRector(app_path('\Shift\Rector\CodeceptionToLaravel\rectorSecondRun.php'), $directory);
+        echo 'Rector Changes from First run : '.PHP_EOL;
+        echo $secondRun;
 
-        $process = new Process(['vendor/bin/rector', 'process', $directory.'\tests\\', '--config', app_path('\Shift\Rector\CodeceptionToLaravel\rectorThirdRun.php'), '--debug'], null, null, null, 300);
-        $process->run();
+        $thirdRun = $this->runRector(app_path('\Shift\Rector\CodeceptionToLaravel\rectorThirdRun.php'), $directory);
         echo 'Rector Changes from Third run : '.PHP_EOL;
-        echo $process->getOutput();
+        echo $thirdRun;
     }
 
     private function fixTestFileFormatting(string $sourceDirectory)
@@ -70,6 +72,10 @@ class CodeceptionToLaravelTests implements BaseShift
                     shell_exec('git -C '.$sourceDirectory.'../'.' mv '.$sourceDirectory.$file.' '.$sourceDirectory.'Unit');
                     $file = 'Unit';
                 }
+                if (str_ends_with($sourceDirectory.$file, '_support')) {
+                    shell_exec('git -C '.$sourceDirectory.'../'.' mv '.$sourceDirectory.$file.' '.$sourceDirectory.'Support');
+                    $file = 'Support';
+                }
                 $this->fixTestFileFormatting($sourceDirectory.$file.'\\');
             } else {
                 if (str_ends_with($file, 'Cest.php')) {
@@ -80,12 +86,16 @@ class CodeceptionToLaravelTests implements BaseShift
         }
     }
 
-    private function dumpToSeeders()
+    private function dumpToSeeders(string $directory)
     {
-        $sqlDump = file_get_contents('C:\Users\martins.rucevskis\projects\product-server\web\tests\_data\dump.sql');
+        if (!file_exists($directory .'\tests\_data\dump.sql')){
+            echo 'Couldn\'t find a dump.sql at ' . $directory . '\tests\_data\'';
+            return;
+        }
+        $sqlDump = file_get_contents($directory .'\tests\_data\dump.sql');
 
         $queries = explode(';', $sqlDump);
-        $kkadiItemi = [];
+        $tableRecords = [];
         foreach ($queries as $query) {
             $query = trim($query);
             if (stripos($query, 'INSERT') === 0) {
@@ -106,30 +116,30 @@ class CodeceptionToLaravelTests implements BaseShift
                     foreach ($item['data'] as $key => $dataItem) {
                         $data[$columns[$key]] = str_replace('`', '', $dataItem['base_expr']);
                     }
-                    $kkadiItemi[$table][] = $data;
+                    $tableRecords[$table][] = $data;
                 }
             }
 
         }
         $seeders = [];
-        foreach ($kkadiItemi as $table => $records) {
-            $this->createSeeder($table, $records);
+        foreach ($tableRecords as $table => $records) {
+            $this->createSeeder($table, $records, $directory);
             $seeders[] = $this->tableToModel($table).'TableSeeder';
         }
-        $this->createTestSeeder($seeders);
+        $this->createTestSeeder($seeders, $directory);
     }
 
-    private function tableToModel($tableName)
+    private function tableToModel($tableName): string
     {
         $studlyCase = str_replace(' ', '', ucwords(str_replace('_', ' ', $tableName)));
 
         return ucfirst($studlyCase);
     }
 
-    private function createSeeder(string $table, array $records)
+    private function createSeeder(string $table, array $records, string $directory)
     {
-        $seederPath = 'C:\Users\martins.rucevskis\projects\product-server\web\database\seeders\\'.$this->tableToModel($table).'TableSeeder.php';
-        copy('C:\Users\martins.rucevskis\PhpstormProjects\shift-slay\app\Shift\ExampleFiles\ExampleSeeder.php', $seederPath);
+        $seederPath = $directory.'\database\seeders\\'.$this->tableToModel($table).'TableSeeder.php';
+        copy(app_path('\Shift\ExampleFiles\ExampleSeeder.php'), $seederPath);
         $seeder = file_get_contents($seederPath);
         $seeder = str_replace('ExampleSeeder', $this->tableToModel($table).'TableSeeder', $seeder);
         $seeder = str_replace('example_table', $table, $seeder);
@@ -157,10 +167,10 @@ class CodeceptionToLaravelTests implements BaseShift
         return $recordString.'        ';
     }
 
-    private function createTestSeeder(array $seeders)
+    private function createTestSeeder(array $seeders, string $directory)
     {
-        $testSeederPath = 'C:\Users\martins.rucevskis\projects\product-server\web\database\seeders\TestSeeder.php';
-        copy('C:\Users\martins.rucevskis\PhpstormProjects\shift-slay\app\Shift\ExampleFiles\ExampleTestSeeder.php',
+        $testSeederPath = $directory . '\database\seeders\TestSeeder.php';
+        copy(app_path('\Shift\ExampleFiles\ExampleTestSeeder.php'),
             $testSeederPath);
         $seeder = file_get_contents($testSeederPath);
         $seeder = str_replace('\'seeders\'',
@@ -169,7 +179,17 @@ class CodeceptionToLaravelTests implements BaseShift
 
     }
 
-    private function seedersAsArray()
+    private function fixNameSpaces(string $directory)
     {
+        $namespaceFixes = $this->runRector(app_path('\Shift\Rector\CodeceptionToLaravel\rectorFixNamespaces.php'), $directory);
+        echo 'Rector Changes from fixing namespaces: '.$directory.PHP_EOL;
+        echo $namespaceFixes;
     }
+
+    private function runRector(string $configPath, string $directory): string{
+        $process = new Process(['vendor/bin/rector', 'process', $directory, '--config', $configPath, '--debug'], timeout:300);
+        $process->run();
+        return $process->getOutput();
+    }
+
 }

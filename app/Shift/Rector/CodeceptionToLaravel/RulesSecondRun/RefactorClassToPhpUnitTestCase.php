@@ -20,6 +20,8 @@ class RefactorClassToPhpUnitTestCase extends AbstractRector
         if (str_ends_with($node->name->name, 'Cest')) {
             $node->name->name = str_replace('Cest', 'Test', $node->name->name);
             $node->extends = new Name('Tests\TestCase');
+        } elseif(isset($node->extends) && $this->isObjectType($node->extends, new \PHPStan\Type\ObjectType('Codeception\Test\Unit'))){
+            $node->extends = new Name('Tests\TestCase');
         }
 
         return $node;

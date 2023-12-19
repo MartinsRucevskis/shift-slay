@@ -26,10 +26,7 @@ class ReplaceApiTesterObject extends AbstractRector
                 return $node;
             }
         }
-//        if (! $this->isName($node, 'I')) {
-//            return null;
-//        }
-        if (! $this->isObjectType($node, new ObjectType('ApiTester'))) {
+        if (! $this->isName($node, 'I')) {
             return null;
         }
         if (! str_ends_with($this->file->getFilePath(), 'Cest.php')) {

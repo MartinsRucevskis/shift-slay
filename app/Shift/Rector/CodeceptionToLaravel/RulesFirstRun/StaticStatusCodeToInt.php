@@ -3,18 +3,17 @@
 namespace App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Stmt\ClassMethod;
+use PHPStan\Type\ObjectType;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
-// Will generate diff as (something)->chainedCall(), but actually will be converted to something->chainedCall(), due to afterTraverse regex modification
-class ChainResponseCodes extends AbstractRector
+class StaticStatusCodeToInt extends AbstractRector
 {
-    private array $sendMethods = ['sendGET', 'sendPOST', 'sendPATCH', 'sendDELETE', 'getJson', 'postJson', 'patchJson', 'deleteJson', 'sendGet', 'sendPatch', 'sendDelete', 'sendPost'];
-
-    private array $codes = [
-        'CONTINUE' => 100,
+    private array $statusNames = [
+        'SWITCHING_PROTOCOLS' => 101,
         'PROCESSING' => 102,
         'EARLY_HINTS' => 103,
         'OK' => 200,
@@ -35,7 +34,7 @@ class ChainResponseCodes extends AbstractRector
         'USE_PROXY' => 305,
         'RESERVED' => 306,
         'TEMPORARY_REDIRECT' => 307,
-        'PERMANENT_REDIRECT' => 308,
+        'PERMANENTLY_REDIRECT' => 308,
         'BAD_REQUEST' => 400,
         'UNAUTHORIZED' => 401,
         'PAYMENT_REQUIRED' => 402,
@@ -54,12 +53,12 @@ class ChainResponseCodes extends AbstractRector
         'UNSUPPORTED_MEDIA_TYPE' => 415,
         'REQUESTED_RANGE_NOT_SATISFIABLE' => 416,
         'EXPECTATION_FAILED' => 417,
-        'UNASSIGNED' => 418,
+        'I_AM_A_TEAPOT' => 418,
         'MISDIRECTED_REQUEST' => 421,
         'UNPROCESSABLE_ENTITY' => 422,
         'LOCKED' => 423,
         'FAILED_DEPENDENCY' => 424,
-        'TOO_EARLY' => 425,
+        'RESERVED_FOR_WEBDAV_ADVANCED_COLLECTIONS_EXPIRED_PROPOSAL' => 425,
         'UPGRADE_REQUIRED' => 426,
         'PRECONDITION_REQUIRED' => 428,
         'TOO_MANY_REQUESTS' => 429,
@@ -70,64 +69,40 @@ class ChainResponseCodes extends AbstractRector
         'BAD_GATEWAY' => 502,
         'SERVICE_UNAVAILABLE' => 503,
         'GATEWAY_TIMEOUT' => 504,
-        'HTTP_VERSION_NOT_SUPPORTED' => 505,
-        'VARIANT_ALSO_NEGOTIATES' => 506,
+        'VERSION_NOT_SUPPORTED' => 505,
+        'VARIANT_ALSO_NEGOTIATES_EXPERIMENTAL' => 506,
         'INSUFFICIENT_STORAGE' => 507,
         'LOOP_DETECTED' => 508,
         'NOT_EXTENDED' => 510,
         'NETWORK_AUTHENTICATION_REQUIRED' => 511,
     ];
-
     public function getNodeTypes(): array
     {
-        return [Node\Stmt\ClassMethod::class];
+        return [Node\Expr\ClassConstFetch::class];
     }
 
+    /** @param Node\Expr\ClassConstFetch  $node */
     public function refactor(Node $node): ?Node
     {
-        $methodStmts = array_filter($node->stmts ?? [], function ($stmt) {
-            return isset($stmt->expr) && $stmt->expr instanceof MethodCall;
-        });
-        $sendMethod = null;
-        /** @var MethodCall $stmnt */
-        foreach ($methodStmts as $key => $stmnt) {
-            if (in_array($stmnt->expr?->name?->name, $this->sendMethods)) {
-                $sendMethod = $key;
-            }
-            if ($stmnt->expr?->name?->name === 'seeResponseCodeIs') {
-                if (isset($sendMethod)) {
-                    if ($stmnt->expr->args[0]->value instanceof Node\Scalar\LNumber) {
-                        $code = $stmnt->expr->args[0]->value;
-                    } elseif(isset($this->codes[$stmnt->expr->args[0]->value->name->name])) {
-                        $code = new Node\Scalar\LNumber($this->codes[$stmnt->expr->args[0]->value->name->name]);
-                    } else{
-                        $code = $stmnt->expr->args[0]->value;
-                    }
-                    $node->stmts[$sendMethod]->expr = new \PhpParser\Node\Expr\MethodCall($node->stmts[$sendMethod]->expr, 'assertStatus', [new \PhpParser\Node\Arg($code)]);
-                    unset($node->stmts[$key]);
-                }
-                $sendMethod = null;
-            }
+        if(!$this->isObjectType($node->class, new ObjectType('Codeception\Util\HttpCode'))){
+            return null;
         }
+        if(!isset($this->statusNames[$node->name->name])){
+            return null;
+        }
+        $statusCode = $this->statusNames[$node->name->name];
+        $node = new Node\Scalar\LNumber($statusCode);
+
 
         return $node;
     }
 
-//    public function afterTraverse(array $nodes)
-//    {
-//        if (! in_array('--dry-run', $_SERVER['argv'])) {
-//            $file = preg_replace('#\((\$response = (\$I|\$this)->(getJson|postJson|patchJson|deleteJson)\([\s\S]*?\))\)->#ms', '$1->', $this->file->getFileContent());
-//            file_put_contents($this->file->getFilePath(), $file);
-//        }
-//
-//        return parent::afterTraverse($nodes);
-//    }
 
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
             new CodeSample(
-                // code before
+            // code before
                 'public function handle(array $record) { return $record[\'context\']; }',
                 // code after
                 'public function handle(\Monolog\LogRecord $record) { return $record->context; }'

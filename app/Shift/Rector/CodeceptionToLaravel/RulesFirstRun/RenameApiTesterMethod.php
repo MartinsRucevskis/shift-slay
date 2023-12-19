@@ -24,7 +24,8 @@ class RenameApiTesterMethod extends AbstractRector
         'sendDELETE' => 'deleteJson',
         'sendDelete' => 'deleteJson',
         'canSeeInDatabase' => 'assertDatabaseHas',
-        'haveInDatabase' => 'assertDatabaseHas',
+        'dontSeeInDatabase' => 'assertDatabaseMissing',
+        'assertLessOrEquals' => 'assertLessThanOrEqual'
     ];
     //        $record = $this->grabFromDatabase('logs', 'message'); japarveido
 
@@ -35,7 +36,10 @@ class RenameApiTesterMethod extends AbstractRector
 
     public function refactor(Node $node): ?Node
     {
-        if (! $this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, new ObjectType('ApiTester'))) {
+        if (
+            !$this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, new ObjectType('ApiTester'))
+            && !$this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, new ObjectType('Unit'))
+        ) {
             return null;
         }
         $rename = $this->methodRenames[$this->getName($node->name)] ?? null;

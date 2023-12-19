@@ -11,7 +11,7 @@ use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 // Will generate diff as (something)->chainedCall(), but actually will be converted to something->chainedCall(), due to afterTraverse regex modification
-class ReplaceApiTesterForOutsideMethodCalls extends AbstractRector
+class RefactorDatabaseCalls extends AbstractRector
 {
     public function getNodeTypes(): array
     {
