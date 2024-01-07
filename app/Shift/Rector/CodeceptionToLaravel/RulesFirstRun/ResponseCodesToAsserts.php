@@ -74,12 +74,12 @@ class ResponseCodesToAsserts extends AbstractRector
 
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Improve asserts, by changing status code asserts to inbuilt methods', [
             new CodeSample(
-                // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+
+                '$this->getJson()->assertStatus(200)',
+
+                '$this->getJson()->assertOk()'
             ),
         ]);
     }

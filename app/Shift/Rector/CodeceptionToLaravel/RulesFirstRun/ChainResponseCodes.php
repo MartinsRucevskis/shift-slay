@@ -98,9 +98,9 @@ class ChainResponseCodes extends AbstractRector
                 if (isset($sendMethod)) {
                     if ($stmnt->expr->args[0]->value instanceof Node\Scalar\LNumber) {
                         $code = $stmnt->expr->args[0]->value;
-                    } elseif(isset($this->codes[$stmnt->expr->args[0]->value->name->name])) {
+                    } elseif (isset($this->codes[$stmnt->expr->args[0]->value->name->name])) {
                         $code = new Node\Scalar\LNumber($this->codes[$stmnt->expr->args[0]->value->name->name]);
-                    } else{
+                    } else {
                         $code = $stmnt->expr->args[0]->value;
                     }
                     $node->stmts[$sendMethod]->expr = new \PhpParser\Node\Expr\MethodCall($node->stmts[$sendMethod]->expr, 'assertStatus', [new \PhpParser\Node\Arg($code)]);
@@ -113,24 +113,31 @@ class ChainResponseCodes extends AbstractRector
         return $node;
     }
 
-//    public function afterTraverse(array $nodes)
-//    {
-//        if (! in_array('--dry-run', $_SERVER['argv'])) {
-//            $file = preg_replace('#\((\$response = (\$I|\$this)->(getJson|postJson|patchJson|deleteJson)\([\s\S]*?\))\)->#ms', '$1->', $this->file->getFileContent());
-//            file_put_contents($this->file->getFilePath(), $file);
-//        }
-//
-//        return parent::afterTraverse($nodes);
-//    }
+    public function afterTraverse(array $nodes)
+    {
+        if (! in_array('--dry-run', $_SERVER['argv'])) {
+            $file = preg_replace('#\((\$response = (\$I|\$this)->(getJson|postJson|patchJson|deleteJson)\([\s\S]*?\))\)->#ms', '$1->', $this->file->getFileContent());
+            file_put_contents($this->file->getFilePath(), $file);
+        }
+
+        return parent::afterTraverse($nodes);
+    }
 
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Chain asserts to requests', [
             new CodeSample(
-                // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+
+                'public function whenSomethingThenAssertIt(): void {
+                     $this->getJson(\'endpoint\');
+                     $I->seeResponseCode(200)
+                 }',
+
+                '
+                public function whenSomethingThenAssertIt(): void {
+                     $this->getJson(\'endpoint\')
+                        ->assertOk();
+                 }',
             ),
         ]);
     }

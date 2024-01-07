@@ -21,13 +21,13 @@ class AddReturnWhenMethodPrivateWithGet extends AbstractRector
     }
 
     /**
-     * @param Node\Stmt\Class_ $node
+     * @param  Node\Stmt\Class_  $node
      */
     public function refactor(Node $node): ?Node
     {
         $methods = $this->nodeFinder->findInstanceOf($node, Node\Stmt\ClassMethod::class);
         foreach ($methods as $method) {
-            if (!$method->isPrivate()) {
+            if (! $method->isPrivate()) {
                 continue;
             }
             $lastNode = $method->stmts[count($method->stmts) - 1];
@@ -44,6 +44,7 @@ class AddReturnWhenMethodPrivateWithGet extends AbstractRector
                             $stmnt->args = array_values($stmnt->args);
                             $stmnt = new Node\Expr\Assign(new Node\Expr\Variable('response'), $stmnt);
                         }
+
                         return $stmnt;
                     }
                 });
@@ -52,6 +53,7 @@ class AddReturnWhenMethodPrivateWithGet extends AbstractRector
                     if ($stmnt === $lastNode) {
                         $stmnt = new Node\Stmt\Return_($stmnt->expr->expr);
                     }
+
                     return $stmnt;
                 });
 
@@ -59,29 +61,42 @@ class AddReturnWhenMethodPrivateWithGet extends AbstractRector
                     if ($stmnt === $method) {
                         $stmnt->returnType = new Node\Name('Illuminate\Testing\TestResponse');
                     }
+
                     return $stmnt;
                 });
             }
         }
 
-
         return $node;
     }
 
-    private function isNodeMakingRequest(Node $node){
+    private function isNodeMakingRequest(Node $node)
+    {
         return $node->expr->expr instanceof Node\Expr\MethodCall &&
             (in_array($node->expr->expr->name->name, ['postJson', 'getJson', 'patchJson', 'deleteJson'])
-            ||in_array($node->expr->expr->var->name->name, ['postJson', 'getJson', 'patchJson', 'deleteJson']));
+            || in_array($node->expr->expr->var->name->name, ['postJson', 'getJson', 'patchJson', 'deleteJson']));
     }
 
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Add return statement if method is sending a request', [
             new CodeSample(
-            // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+
+                '
+                public function testSomething(): void{
+                    $this->makeEndpointRequest([]);
+                }
+                private function makeEndpointRequest($data): void{
+                    $this->postJson($this->endpoint, $data);
+                }',
+
+                '
+                public function testSomething(): void{
+                    $response = $this->makeEndpointRequest([]);
+                }
+                private function makeEndpointRequest($data): TestResponse{
+                    return $this->postJson($this->endpoint, $data);
+                }',
             ),
         ]);
     }

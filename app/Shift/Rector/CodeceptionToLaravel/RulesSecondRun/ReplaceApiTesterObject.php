@@ -5,7 +5,6 @@ namespace App\Shift\Rector\CodeceptionToLaravel\RulesSecondRun;
 use PhpParser\Node;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\Variable;
-use PHPStan\Type\ObjectType;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -20,9 +19,10 @@ class ReplaceApiTesterObject extends AbstractRector
 
     public function refactor(Node $node): ?Node
     {
-        if($node instanceof Node\Expr\MethodCall){
+        if ($node instanceof Node\Expr\MethodCall) {
             if (str_ends_with($this->file->getFilePath(), 'Cest.php') && $node->var->name === 'I') {
                 $node->var->name = 'this';
+
                 return $node;
             }
         }
@@ -38,12 +38,12 @@ class ReplaceApiTesterObject extends AbstractRector
 
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Replaces property fetch from I to testCase', [
             new CodeSample(
-                // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+
+                '$this->I->assertEquals();',
+
+                '$this->testCase->assertEquals()'
             ),
         ]);
     }

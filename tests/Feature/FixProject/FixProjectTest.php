@@ -18,7 +18,7 @@ class FixProjectTest extends TestCase
     public function test_migrate_project(): void
     {
         $this->markTestIncomplete('Need to traverse whole arrays, provide files for github actions');
-        $response = $this->getJson();
+        $this->assertDatabaseHas()
         $response->assertTemporaryRedirect();
 
         $response->assertStatus();

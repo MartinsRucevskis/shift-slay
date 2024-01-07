@@ -3,8 +3,6 @@
 namespace App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr\Assign;
-use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\Variable;
 use PHPStan\Type\ObjectType;
 use Rector\Core\Rector\AbstractRector;
@@ -25,8 +23,8 @@ class RefactorToResponseMethods extends AbstractRector
     public function refactor(Node $node): ?Node
     {
         if (
-            !$this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, new ObjectType('ApiTester'))
-            && !$this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, new ObjectType('Unit'))
+            ! $this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, new ObjectType('ApiTester'))
+            && ! $this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, new ObjectType('Unit'))
         ) {
             return null;
         }
@@ -42,12 +40,12 @@ class RefactorToResponseMethods extends AbstractRector
 
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Replace json path access to equivalent in Laravel feature tests', [
             new CodeSample(
-                // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+
+                '$I->grabDataFromResponseByJsonPath(\'some.path\')',
+
+                '$response->json(\'some.path\')'
             ),
         ]);
     }

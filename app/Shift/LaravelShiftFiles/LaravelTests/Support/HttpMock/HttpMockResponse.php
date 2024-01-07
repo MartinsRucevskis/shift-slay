@@ -25,6 +25,16 @@ class HttpMockResponse
         return $this->responseConditions;
     }
 
+    public function respondWith(HttpMockResponse $response): self
+    {
+        $propertiesToReplace = ['statusCode', 'body', 'headers'];
+        foreach ($propertiesToReplace as $property) {
+            $this->{$property} = $response->{$property} ?? $this->{$property};
+        }
+
+        return $this;
+    }
+
     public function respondWithBody(null|array|string $body = ''): self
     {
         $this->body = $body;

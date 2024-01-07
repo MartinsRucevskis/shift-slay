@@ -81,12 +81,24 @@ class ExampleToTestWithDocs extends AbstractRector
 
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Move from example to phpunit attributes', [
             new CodeSample(
-                // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+                '
+                /**
+                 * @example ["firstEndpoint", "filepath.txt"]
+                 * @example ["firstEndpoint", "differentPath.txt"]
+                 */
+                public function whenSomethingThenAssertIt($example): void {
+                     $this->postJson($example[0], file_get_contents($example[1]));
+                 }',
+
+                '
+                /** */
+                 #[TestWith([\'firstEndpoint\', \'filepath.txt\'])]
+                 #[TestWith([\'firstEndpoint\', \'differentPath.txt\'])]
+                public function whenSomethingThenAssertIt(string $argumentFromProvider0, string $argumentFromProvider1): void {
+                     $this->postJson($argumentFromProvider0, file_get_contents($argumentFromProvider1));
+                 }',
             ),
         ]);
     }

@@ -5,22 +5,15 @@ declare(strict_types=1);
 namespace App\Shift\Shifts;
 
 use Exception;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use PHPSQLParser\PHPSQLParser;
 use Symfony\Component\Process\Process;
 
 class CodeceptionToLaravelTests implements BaseShift
 {
-    /**
-     * @var string[]
-     */
-    public array $overLappingFiles = [];
-    public array $nameSpaceChanges = [];
-
     public function run(string $directory): void
     {
-        $testDirectory = $directory. '\tests';
+        $testDirectory = $directory.'\tests';
         $this->refactorTests($testDirectory);
         $this->fixTestFileFormatting($testDirectory.'\\');
         $this->dumpToSeeders($directory);
@@ -88,11 +81,12 @@ class CodeceptionToLaravelTests implements BaseShift
 
     private function dumpToSeeders(string $directory)
     {
-        if (!file_exists($directory .'\tests\_data\dump.sql')){
-            echo 'Couldn\'t find a dump.sql at ' . $directory . '\tests\_data\'';
+        if (! file_exists($directory.'\tests\_data\dump.sql')) {
+            echo 'Couldn\'t find a dump.sql at '.$directory.'\tests\_data\'';
+
             return;
         }
-        $sqlDump = file_get_contents($directory .'\tests\_data\dump.sql');
+        $sqlDump = file_get_contents($directory.'\tests\_data\dump.sql');
 
         $queries = explode(';', $sqlDump);
         $tableRecords = [];
@@ -150,12 +144,11 @@ class CodeceptionToLaravelTests implements BaseShift
     private function recordsAsArrayString(array $records, string $table)
     {
         $recordString = '';
-        $recordCount = count($records[0]) ?? null;
         foreach ($records as $key => $record) {
-            if ($key !== 0 && array_keys($records[$key-1]) !== array_keys($record)) {
+            if ($key !== 0 && array_keys($records[$key - 1]) !== array_keys($record)) {
                 $recordString .= '            '.PHP_EOL.'        ]);'.PHP_EOL;
                 $recordString .= '            DB::table(\''.$table.'\')->insert(['.PHP_EOL.'                ['.PHP_EOL;
-            } else{
+            } else {
                 $recordString .= '            ['.PHP_EOL;
             }
             foreach ($record as $column => $value) {
@@ -169,7 +162,7 @@ class CodeceptionToLaravelTests implements BaseShift
 
     private function createTestSeeder(array $seeders, string $directory)
     {
-        $testSeederPath = $directory . '\database\seeders\TestSeeder.php';
+        $testSeederPath = $directory.'\database\seeders\TestSeeder.php';
         copy(app_path('\Shift\ExampleFiles\ExampleTestSeeder.php'),
             $testSeederPath);
         $seeder = file_get_contents($testSeederPath);
@@ -186,10 +179,11 @@ class CodeceptionToLaravelTests implements BaseShift
         echo $namespaceFixes;
     }
 
-    private function runRector(string $configPath, string $directory): string{
-        $process = new Process(['vendor/bin/rector', 'process', $directory, '--config', $configPath, '--debug'], timeout:300);
+    private function runRector(string $configPath, string $directory): string
+    {
+        $process = new Process(['vendor/bin/rector', 'process', $directory, '--config', $configPath, '--debug'], timeout: 300);
         $process->run();
+
         return $process->getOutput();
     }
-
 }

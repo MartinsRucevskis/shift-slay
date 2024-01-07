@@ -4,9 +4,7 @@ namespace App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\Variable;
-use PhpParser\Node\Stmt\ClassMethod;
 use PHPStan\Node\Method\MethodCall;
-use PHPStan\Type\ObjectType;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -20,27 +18,27 @@ class RefactorJsonFilesToArray extends AbstractRector
 
     private array $sendMethods = ['sendGET', 'sendPOST', 'sendPATCH', 'sendDELETE', 'getJson', 'postJson', 'patchJson', 'deleteJson', 'sendGet', 'sendPatch', 'sendDelete', 'sendPost'];
 
-
     public function getNodeTypes(): array
     {
         return [Node\Expr\MethodCall::class];
     }
 
+    /** @var MethodCall */
     public function refactor(Node $node): ?Node
     {
-        if(!$this->isNames($node->name, $this->sendMethods)){
+        if (! $this->isNames($node->name, $this->sendMethods)) {
             return null;
         }
-        $this->traverseNodesWithCallable($node->args, function ($argument){
-            if(!$argument instanceof Node\Expr\FuncCall || !$this->isNames($argument->name, ['file_get_contents' ,'Safe\file_get_contents'])) {
+        $this->traverseNodesWithCallable($node->args, function ($argument) {
+            if (! $argument instanceof Node\Expr\FuncCall || ! $this->isNames($argument->name, ['file_get_contents', 'Safe\file_get_contents'])) {
                 return $argument;
             }
             $strings = $this->betterNodeFinder->findInstanceOf($argument->args, Node\Scalar\String_::class);
-            if(!isset($strings)){
+            if (! isset($strings)) {
                 return $argument;
             }
             $fileName = array_pop($strings);
-            if(!$fileName instanceof Node\Scalar\String_ ||!str_ends_with($fileName->value, '.json')){
+            if (! $fileName instanceof Node\Scalar\String_ || ! str_ends_with($fileName->value, '.json')) {
                 return $argument;
             }
 
@@ -50,15 +48,14 @@ class RefactorJsonFilesToArray extends AbstractRector
         return $node;
     }
 
-
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Covert Json files to array when sending requests', [
             new CodeSample(
-            // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+
+                '$this->postJson(\'endpoint\', file_get_contents(\'jsonFile.json\'))',
+
+                '$this->postJson(\'endpoint\', $this->jsonFileContentsAsArray(\'jsonFile.json\')'
             ),
         ]);
     }

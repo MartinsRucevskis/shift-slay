@@ -50,12 +50,26 @@ class AddResponseAsParamWhenCaller extends AbstractRector
 
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Add Response argument when method has it as param', [
             new CodeSample(
-                // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+
+                '
+                public function whenSomethingThenAssert(): void{
+                    $response = $this->getJson(\'endpoint\');
+                    $this->assertResponse();
+                }
+                private function assertResponse(TestResponse $response): void {
+                    $this->assertEquals($response->getContents(), file_get_contents(\'expectedResponseFile.txt\');
+                }',
+
+                '
+                public function whenSomethingThenAssert(): void{
+                    $response = $this->getJson(\'endpoint\');
+                    $this->assertResponse($response);
+                }
+                private function assertResponse(TestResponse $response): void {
+                    $this->assertEquals($response->getContents(), file_get_contents(\'expectedResponseFile.txt\');
+                }'
             ),
         ]);
     }

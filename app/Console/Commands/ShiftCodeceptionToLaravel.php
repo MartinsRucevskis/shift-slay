@@ -7,14 +7,14 @@ namespace App\Console\Commands;
 use App\Shift\Shifts\CodeceptionToLaravelTests;
 use Illuminate\Console\Command;
 
-class ShiftCodeceptionToPhpUnit extends Command
+class ShiftCodeceptionToLaravel extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'shift:CodeceptionToPhpUnit';
+    protected $signature = 'shift:CodeceptionToLaravel';
 
     /**
      * The console command description.
@@ -31,5 +31,6 @@ class ShiftCodeceptionToPhpUnit extends Command
         echo "I'm starting to shift, SLAYYY!".PHP_EOL;
         config(['shift.command_name' => 'shift:CodeceptionToPhpUnit']);
         (new CodeceptionToLaravelTests)->run(config('shift.project_path'));
+        echo "I'm done!!".PHP_EOL;
     }
 }

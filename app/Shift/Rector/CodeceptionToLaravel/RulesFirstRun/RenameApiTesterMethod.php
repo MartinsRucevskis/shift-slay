@@ -25,8 +25,9 @@ class RenameApiTesterMethod extends AbstractRector
         'sendDelete' => 'deleteJson',
         'canSeeInDatabase' => 'assertDatabaseHas',
         'dontSeeInDatabase' => 'assertDatabaseMissing',
-        'assertLessOrEquals' => 'assertLessThanOrEqual'
+        'assertLessOrEquals' => 'assertLessThanOrEqual',
     ];
+
     //        $record = $this->grabFromDatabase('logs', 'message'); japarveido
 
     public function getNodeTypes(): array
@@ -37,8 +38,8 @@ class RenameApiTesterMethod extends AbstractRector
     public function refactor(Node $node): ?Node
     {
         if (
-            !$this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, new ObjectType('ApiTester'))
-            && !$this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, new ObjectType('Unit'))
+            ! $this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, new ObjectType('ApiTester'))
+            && ! $this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, new ObjectType('Unit'))
         ) {
             return null;
         }
@@ -58,12 +59,54 @@ class RenameApiTesterMethod extends AbstractRector
 
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Replace codeception methods to equivalents in Laravel Feature tests', [
             new CodeSample(
-                // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+
+                '$I->sendGET();',
+
+                '$response = $I->getJson();'
+            ),
+            new CodeSample(
+
+                '$I->sendPOST();',
+
+                '$response = $I->postJson();'
+            ),
+            new CodeSample(
+
+                '$I->sendPATCH();',
+
+                '$response = $I->patchJson();'
+            ),
+            new CodeSample(
+
+                '$I->sendDELETE();',
+
+                '$response = $I->deleteJson();'
+            ),
+            new CodeSample(
+
+                '$I->haveHttpHeader();',
+
+                '$I->withHeader();'
+            ),
+            new CodeSample(
+
+                '$I->canSeeInDatabase();',
+
+                '$I->assertDatabaseHas();'
+            ),
+            new CodeSample(
+
+                '$I->dontSeeInDatabase();',
+
+                '$I->assertDatabaseMissing();'
+            ),
+            new CodeSample(
+
+                '$I->assertLessOrEquals();',
+
+                '$I->assertLessThanOrEqual();'
             ),
         ]);
     }

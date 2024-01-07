@@ -23,7 +23,6 @@ class RemoveApiTesterParams extends AbstractRector
      */
     public function refactor(Node $node): ?Node
     {
-        $paramName = '';
         $params = $node->params;
         foreach ($params as $key => $param) {
             if ($this->isObjectType($param, new ObjectType('ApiTester'))) {
@@ -51,12 +50,14 @@ class RemoveApiTesterParams extends AbstractRector
 
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Changes Api tester params to be of TestCase', [
             new CodeSample(
-                // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+
+                '
+                /**  @var ApiTester $I */
+                $variable->doSomething($I)',
+
+                '$variable->doSomething($this)'
             ),
         ]);
     }

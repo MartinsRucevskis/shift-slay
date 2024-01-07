@@ -38,8 +38,8 @@ class ReplaceOutgoingRequestsWithOutgoingRequest extends AbstractRector
                     $arrayAccess = $this->nodeFinder->findInstancesOf($node, [Node\Expr\ArrayDimFetch::class]);
                     if (count($isUsedAsVariable) - count($arrayAccess) <= 1) {
                         $onlyFirstElement = array_filter($arrayAccess, function ($arrayDim) use ($variableName) {
-                                return $arrayDim->var->name === $variableName && $arrayDim->dim->value !== 0;
-                            }) === [];
+                            return $arrayDim->var->name === $variableName && $arrayDim->dim->value !== 0;
+                        }) === [];
                         if ($onlyFirstElement && count($arrayAccess) > 0) {
                             $stmnt->expr->name->name = 'outgoingRequest';
                             $this->traverseNodesWithCallable($node, function ($stmnt) use ($variableName) {
@@ -53,6 +53,7 @@ class ReplaceOutgoingRequestsWithOutgoingRequest extends AbstractRector
                                 }
                             });
                         }
+
                         return $stmnt;
                     }
                     $this->traverseNodesWithCallable($node, function ($stmnt) use ($variableName) {
@@ -74,9 +75,9 @@ class ReplaceOutgoingRequestsWithOutgoingRequest extends AbstractRector
 
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Replace outgoingRequests with outgoingRequest when possible', [
             new CodeSample(
-                // code before
+
                 '
                 use Tests\TestCase;
 
@@ -91,7 +92,7 @@ class ReplaceOutgoingRequestsWithOutgoingRequest extends AbstractRector
                         $this->assertEquals(\'something\', $requests[1]->body());
                     }
                 ',
-                // code after
+
                 '
                 use Tests\TestCase;
 

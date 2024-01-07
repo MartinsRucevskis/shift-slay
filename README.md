@@ -4,17 +4,27 @@ A Tool for automated framework shifts.
 
 
 # Currently supported
-Minimal Lumen 8 to Laravel 8 migration - migrates mainly config and currently only for specific projects with codeception tests. Requires to fix custom defined configs and other specific Lumen to Laravel changes
-
+## Lumen8 - Laravel 8
+Migrates mainly config and currently only for specific projects with codeception tests. Requires to fix custom defined configs and other specific Lumen to Laravel changes
+## Laravel 8 - Laravel 9
+Updates with changes from Laravels documentation
+## LAravel 9 - Laravel 10
+Updates with changes from Laravels documentation, adds config file updates, Gelf and Monolog updates
+## Codeception - Laravel Feature tests
+Is specialized to replace phiremock. Shifts most of the tests, yet can break some stuff.
+Requires that ApiTester is named as I.
 
 
 ## Commands
 
 Commands for launching migrations
 
-|        Migration        |Command                        
-|----------------|-------------------------------------|
-|Lumen8 - Laravel8|`php artisan Shift:lumen8tolaravel8`         
+| Migration                           |Command                        
+|-------------------------------------|-------------------------------------|
+| Lumen8 - Laravel8                   |`php artisan shift:Lumen8tolaravel8`       
+| Laravel8 - Laravel 9                | `php artisan shift:Laravel8ToLaravel9`
+| Laravel 9 - Laravel 10              | `php artisan shift:Laravel9ToLaravel10`
+| Codeception - Laravel Feature tests | ``
 
 
 ## Setup
@@ -22,9 +32,7 @@ Commands for launching migrations
 - Pull `shift-slay` locally
 - Edit `.env` file
     -  Set `SHIFT_PROJECT_PATH` to project You want to upgrade
-    - Set `COMPOSER_AUTOLOAD_PATH` to `autoload_classmap` location in project You want to upgrade
-    - Set `PLAIN_LARAVEL_PATH` to plain laravel with version you will upgrade to ***To be changed, such that there isn't a need to provide this***
-- Launch migration
+  - Launch migration
 
 
 ## Important!

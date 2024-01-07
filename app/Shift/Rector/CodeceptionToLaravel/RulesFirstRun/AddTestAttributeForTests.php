@@ -32,12 +32,20 @@ class AddTestAttributeForTests extends AbstractRector
 
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Add test param to public methods in files that end with Cest.php', [
             new CodeSample(
-                // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+
+                'public function whenSomethingThenAssertIt(): void {
+                     $this->getJson(\'endpoint\')
+                        ->assertOk();
+                 }',
+
+                '
+                #[Test]
+                public function whenSomethingThenAssertIt(): void {
+                     $this->getJson(\'endpoint\')
+                        ->assertOk();
+                 }',
             ),
         ]);
     }

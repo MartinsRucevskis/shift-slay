@@ -11,8 +11,6 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 class RefactorGrabFromDatabase extends AbstractRector
 {
-    //        $record = $this->grabFromDatabase('logs', 'message'); japarveido
-
     public function getNodeTypes(): array
     {
         return [Node\Expr\MethodCall::class];
@@ -29,11 +27,10 @@ class RefactorGrabFromDatabase extends AbstractRector
         $methodArguments = $node->args;
         $method = new Node\Expr\StaticCall(new Node\Name('Illuminate\Support\Facades\DB'), 'table', [$methodArguments[0]]);
         if (count($methodArguments) === 2) {
-            return new MethodCall($method, 'get', [$methodArguments[1]]);
+            $node = new MethodCall($method, 'get', [$methodArguments[1]]);
         } else {
             $method = new MethodCall($method, 'where', [$methodArguments[2]]);
-
-            return new MethodCall($method, 'get', [$methodArguments[1]]);
+            $node = new MethodCall($method, 'get', [$methodArguments[1]]);
         }
 
         return $node;
@@ -43,10 +40,10 @@ class RefactorGrabFromDatabase extends AbstractRector
     {
         return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
             new CodeSample(
-                // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+
+                '$I->grabFromDatabase(\'logs\',[\'id\' => 666])',
+
+                'DB::table(\'logs\')->where([\'id\' => 666])'
             ),
         ]);
     }

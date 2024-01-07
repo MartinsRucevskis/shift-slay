@@ -3,9 +3,6 @@
 namespace App\Shift\Rector\CodeceptionToLaravel\RulesThirdRun;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr\MethodCall;
-use PhpParser\Node\Identifier;
-use PhpParser\Node\Scalar\LNumber;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -18,12 +15,12 @@ class RemoveApiTesterFromCallBack extends AbstractRector
         return [Node\Expr\Closure::class];
     }
 
-    /** @param Node\Expr\Closure $node */
+    /** @param  Node\Expr\Closure  $node */
     public function refactor(Node $node): ?Node
     {
         $uses = $node->uses;
-        foreach ($uses as $key => $use){
-            if($this->isName($use->var, 'I')){
+        foreach ($uses as $key => $use) {
+            if ($this->isName($use->var, 'I')) {
                 unset($uses[$key]);
             }
         }
@@ -34,12 +31,14 @@ class RemoveApiTesterFromCallBack extends AbstractRector
 
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Removes Codeceptions Api tester', [
             new CodeSample(
-                // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+
+                'function() use($I){
+                }',
+
+                'function(){
+                }'
             ),
         ]);
     }

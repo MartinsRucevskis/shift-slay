@@ -63,10 +63,6 @@ class RefactorMockCreation extends AbstractRector
                 $mockMethod = $this->nodeFactory->createMethodCall($methodVariable, 'httpMock', [$conditionUrl]);
 
                 return $this->nodeFactory->createMethodCall($mockMethod, 'addResponse', [$mockResponse]);
-
-                //                $this->nodeFactory->createMethodCall($mockMethod, 'addResponse')
-                return $this->nodeFactory->createMethodCall('this->httpMock('.$conditionUrl.')->addResponse($this->fakeHttpResponse()->when()->postRequest()->withBody(\'someBody\')->then()->respond()->withStatusCode(200)->andBody(file_get_contents(\'mockPath\')))', '');
-
             }
         });
 
@@ -242,12 +238,29 @@ class RefactorMockCreation extends AbstractRector
 
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Refactor mock access from Phiremock to HttpStatelessMock trait', [
             new CodeSample(
-                // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+
+                '
+                public function testSomething(): void {
+                    $I->expectARequestToRemoteServiceWithAResponse(
+                        Phiremock::on($this->requestProxy()->andBody(Is::containing(\'exampleSubstring\')))->then(
+                            Respond::withStatusCode(200)->andBody(file_get_contents(\'someMockResponse.txt\'))
+                        )
+                    );
+                 }
+
+                 private function requestProxy(): ConditionsBuilder{
+                    return A::postRequest()->andUrl(Is::equalTo(\'someUrl\'));
+                 }',
+
+                '
+                public function testSomething(): void {
+                    $this->httpMock(\'someUrl\')->addResponse(
+                        $this->httpMockResponse->when()->post->bodyIsContaining(\'exampleSubstring\')
+                        ->then->respondWithStatusCode(200)->respondWithBody(\'someMockResponse.txt\')
+                    );
+                }'
             ),
         ]);
     }

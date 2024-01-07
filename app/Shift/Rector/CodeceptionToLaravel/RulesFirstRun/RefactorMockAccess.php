@@ -90,12 +90,22 @@ class RefactorMockAccess extends AbstractRector
 
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Refactor made request retrieving from phiremock to HttpOutgoingRequestRetriever trait', [
             new CodeSample(
-                // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+
+                '
+                public function testSomething(): void {
+                    $I->grabRequestsMadeToRemoteService($this->requestProxy())
+                 }
+
+                 private function requestProxy(): ConditionsBuilder{
+                    return A::postRequest()->andUrl(Is::equalTo(\'someUrl\'));
+                 }',
+
+                '
+                public function testSomething(): void {
+                    $this->outgoingRequests(\'someUrl\', \'POST\')
+                }'
             ),
         ]);
     }

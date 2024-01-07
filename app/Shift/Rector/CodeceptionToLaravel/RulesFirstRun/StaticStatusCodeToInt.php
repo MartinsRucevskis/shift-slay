@@ -3,8 +3,6 @@
 namespace App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr\Variable;
-use PhpParser\Node\Stmt\ClassMethod;
 use PHPStan\Type\ObjectType;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -76,36 +74,35 @@ class StaticStatusCodeToInt extends AbstractRector
         'NOT_EXTENDED' => 510,
         'NETWORK_AUTHENTICATION_REQUIRED' => 511,
     ];
+
     public function getNodeTypes(): array
     {
         return [Node\Expr\ClassConstFetch::class];
     }
 
-    /** @param Node\Expr\ClassConstFetch  $node */
+    /** @param  Node\Expr\ClassConstFetch  $node */
     public function refactor(Node $node): ?Node
     {
-        if(!$this->isObjectType($node->class, new ObjectType('Codeception\Util\HttpCode'))){
+        if (! $this->isObjectType($node->class, new ObjectType('Codeception\Util\HttpCode'))) {
             return null;
         }
-        if(!isset($this->statusNames[$node->name->name])){
+        if (! isset($this->statusNames[$node->name->name])) {
             return null;
         }
         $statusCode = $this->statusNames[$node->name->name];
         $node = new Node\Scalar\LNumber($statusCode);
 
-
         return $node;
     }
 
-
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Replace Codeception HttpCode with int', [
             new CodeSample(
-            // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+
+                '$this->assertSomething(Codeception\Util\HttpCode::OK)',
+
+                '$this->assertSomething(200)'
             ),
         ]);
     }

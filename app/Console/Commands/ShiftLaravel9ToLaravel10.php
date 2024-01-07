@@ -31,5 +31,6 @@ class ShiftLaravel9ToLaravel10 extends Command
         echo "I'm starting to shift, SLAYYY!".PHP_EOL;
         config(['shift.command_name' => 'shift:Laravel9ToLaravel10']);
         (new Laravel9ToLaravel10())->run(config('shift.project_path'));
+        echo "I'm done!!".PHP_EOL;
     }
 }

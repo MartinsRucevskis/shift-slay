@@ -32,12 +32,12 @@ class RefactorGetResponse extends AbstractRector
 
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Change access to response body', [
             new CodeSample(
-                // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+
+                '$response = $I->grabResponse();',
+
+                '$response = $response->getContent();'
             ),
         ]);
     }

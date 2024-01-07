@@ -35,7 +35,7 @@ abstract class TestCase extends BaseTestCase
     public function mockResponse(
         string $directory,
         string $mockFilename,
-        string $type = null
+        ?string $type = null
     ): string {
         return $this->mockFileContent(
             $directory,
@@ -48,7 +48,7 @@ abstract class TestCase extends BaseTestCase
     public function mockRequest(
         string $directory,
         string $mockFilename,
-        string $type = null
+        ?string $type = null
     ): array {
         return json_decode($this->mockFileContent(
             $directory,
@@ -58,12 +58,12 @@ abstract class TestCase extends BaseTestCase
         ), true);
     }
 
-    public function outgoingRequest(string $url, string $method = null, string $body = null, bool $bodyMatchExact = false): Request
+    public function outgoingRequest(string $url, ?string $method = null, ?string $body = null, bool $bodyMatchExact = false): Request
     {
         return $this->outgoingRequests($url)->first();
     }
 
-    public function outgoingRequests(string $url, string $method = null, string $body = null, bool $bodyMatchExact = false): Collection
+    public function outgoingRequests(string $url, ?string $method = null, ?string $body = null, bool $bodyMatchExact = false): Collection
     {
         /** @var Collection $traffic */
         return Http::recorded(function (Request $request, Response $response) use ($url, $method, $body, $bodyMatchExact) {
@@ -93,8 +93,8 @@ abstract class TestCase extends BaseTestCase
     private function mockFileContent(
         string $directory,
         string $mockFilename,
-        string $type = null,
-        string $subType = null
+        ?string $type = null,
+        ?string $subType = null
     ): string {
         return file_get_contents((new Collection(
             [$directory, 'Mock', $type, $subType, $mockFilename]

@@ -18,6 +18,13 @@ class MockResponseConditions
     {
     }
 
+    public function method(string $method): self
+    {
+        $this->requestMethod = $method;
+
+        return $this;
+    }
+
     public function get(): self
     {
         $this->requestMethod = 'GET';
@@ -67,11 +74,10 @@ class MockResponseConditions
 
     public function conditionsMatchRequest(Request $request): bool
     {
-        return ($this->requestMethod === '' || $request->method() === $this->requestMethod)
-            && $this->matchBody($request->body());
+        return $this->matchesRequestMethod($request->method()) && $this->matchBody($request->body());
     }
 
-    private function matchBody(string $body)
+    private function matchBody(string $body): bool
     {
         $matches = true;
         if (isset($this->bodyContains)) {
@@ -83,16 +89,8 @@ class MockResponseConditions
         return $matches;
     }
 
-    public function httpMock(string $url = '*'): HttpMock
+    private function matchesRequestMethod(string $method): bool
     {
-        foreach ($this->mocks as $mock) {
-            if ($mock->url() === $url) {
-                return $mock;
-            }
-        }
-        $mock = new HttpMock($url);
-        $this->mocks[] = $mock;
-
-        return $mock;
+        return $this->requestMethod === '' || $method === $this->requestMethod;
     }
 }
