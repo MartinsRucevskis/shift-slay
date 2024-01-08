@@ -13,11 +13,6 @@ use Symfony\Component\Process\Process;
 
 class Lumen8ToLaravel8 implements BaseShift
 {
-    /**
-     * @var string[]
-     */
-    public array $overLappingFiles = [];
-
     public function run(string $directory): void
     {
         $this->addLaravelFiles(app_path('/Shift/LaravelShiftFiles/Laravel8/'), $directory);
@@ -51,8 +46,6 @@ class Lumen8ToLaravel8 implements BaseShift
                 $this->addLaravelFiles($sourcePath, $destinationPath);
             } elseif (! file_exists($destinationPath) || str_contains($destinationPath, 'config/app.php') || str_contains($destinationPath, 'index.php')) {
                 copy($sourcePath, $destinationPath);
-            } elseif (file_exists($destinationPath)) {
-                $this->overLappingFiles[] = $destinationPath;
             }
         }
     }

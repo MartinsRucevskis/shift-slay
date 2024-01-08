@@ -57,9 +57,9 @@ class FixMonolog extends AbstractRector
     {
         return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
             new CodeSample(
-                // code before
+
                 'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
+
                 'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
             ),
         ]);

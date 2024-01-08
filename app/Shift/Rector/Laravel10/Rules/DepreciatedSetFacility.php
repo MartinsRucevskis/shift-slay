@@ -34,12 +34,12 @@ class DepreciatedSetFacility extends AbstractRector
 
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition('Upgrade Monolog method signatures and array usage to object usage', [
+        return new RuleDefinition('Updates setFacility to be setAdditional(\'facility\')', [
             new CodeSample(
-                // code before
-                'public function handle(array $record) { return $record[\'context\']; }',
-                // code after
-                'public function handle(\Monolog\LogRecord $record) { return $record->context; }'
+
+                '$gelf->setFacility($facility);',
+
+                '$gelf->setAdditional(\'facility\', $facility)'
             ),
         ]);
     }
