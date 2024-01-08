@@ -13,3 +13,5 @@ parameters:
         - '#Parameter \#2 \$className of class App\\Shift\\Objects\\ClassVariable constructor expects string, string\|null given.#'
         - '#Parameter \#3 \$subject of function preg_replace expects array\|string, string\|null given.#'
         - '#Parameter \#1 ...\$arrays of function array_merge expects array, array<mixed, mixed>\|string given#'
+        - '#Parameter \#3 \$subject of function str_replace expects array\|string, string\|false given.#'
+        - '#Possibly invalid array key type \(array<int, string>\|string\)#'

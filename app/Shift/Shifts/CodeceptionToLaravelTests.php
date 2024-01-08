@@ -11,6 +11,9 @@ use Symfony\Component\Process\Process;
 
 class CodeceptionToLaravelTests implements BaseShift
 {
+    /**
+     * @throws Exception
+     */
     public function run(string $directory): void
     {
         $testDirectory = $directory.'\tests';
@@ -21,12 +24,12 @@ class CodeceptionToLaravelTests implements BaseShift
         $this->fixNameSpaces($testDirectory);
     }
 
-    private function addTestFiles(string $app_path, string $directory)
+    private function addTestFiles(string $app_path, string $directory): void
     {
         File::copyDirectory($app_path, $directory);
     }
 
-    private function refactorTests($directory)
+    private function refactorTests(string $directory): void
     {
         $directory .= '\\';
         $firstRun = $this->runRector(app_path('\Shift\Rector\CodeceptionToLaravel\rectorFirstRun.php'), $directory);
@@ -42,7 +45,7 @@ class CodeceptionToLaravelTests implements BaseShift
         echo $thirdRun;
     }
 
-    private function fixTestFileFormatting(string $sourceDirectory)
+    private function fixTestFileFormatting(string $sourceDirectory): void
     {
         $directory = opendir($sourceDirectory);
         if ($directory === false) {
@@ -79,14 +82,17 @@ class CodeceptionToLaravelTests implements BaseShift
         }
     }
 
-    private function dumpToSeeders(string $directory)
+    private function dumpToSeeders(string $directory): void
     {
-        if (! file_exists($directory.'\tests\_data\dump.sql')) {
+        $columns = [];
+        $table = '';
+        $sqlDump = file_get_contents($directory.'\tests\_data\dump.sql');
+
+        if(!$sqlDump){
             echo 'Couldn\'t find a dump.sql at '.$directory.'\tests\_data\'';
 
             return;
         }
-        $sqlDump = file_get_contents($directory.'\tests\_data\dump.sql');
 
         $queries = explode(';', $sqlDump);
         $tableRecords = [];
@@ -123,14 +129,20 @@ class CodeceptionToLaravelTests implements BaseShift
         $this->createTestSeeder($seeders, $directory);
     }
 
-    private function tableToModel($tableName): string
+    private function tableToModel(string $tableName): string
     {
         $studlyCase = str_replace(' ', '', ucwords(str_replace('_', ' ', $tableName)));
 
         return ucfirst($studlyCase);
     }
 
-    private function createSeeder(string $table, array $records, string $directory)
+    /**
+     * @param string $table
+     * @param array<mixed> $records
+     * @param string $directory
+     * @return void
+     */
+    private function createSeeder(string $table, array $records, string $directory): void
     {
         $seederPath = $directory.'\database\seeders\\'.$this->tableToModel($table).'TableSeeder.php';
         copy(app_path('\Shift\ExampleFiles\ExampleSeeder.php'), $seederPath);
@@ -141,7 +153,12 @@ class CodeceptionToLaravelTests implements BaseShift
         file_put_contents($seederPath, $seeder);
     }
 
-    private function recordsAsArrayString(array $records, string $table)
+    /**
+     * @param array<mixed> $records
+     * @param string $table
+     * @return string
+     */
+    private function recordsAsArrayString(array $records, string $table): string
     {
         $recordString = '';
         foreach ($records as $key => $record) {
@@ -160,7 +177,12 @@ class CodeceptionToLaravelTests implements BaseShift
         return $recordString.'        ';
     }
 
-    private function createTestSeeder(array $seeders, string $directory)
+    /**
+     * @param array<mixed> $seeders
+     * @param string $directory
+     * @return void
+     */
+    private function createTestSeeder(array $seeders, string $directory): void
     {
         $testSeederPath = $directory.'\database\seeders\TestSeeder.php';
         copy(app_path('\Shift\ExampleFiles\ExampleTestSeeder.php'),
@@ -172,7 +194,7 @@ class CodeceptionToLaravelTests implements BaseShift
 
     }
 
-    private function fixNameSpaces(string $directory)
+    private function fixNameSpaces(string $directory): void
     {
         $namespaceFixes = $this->runRector(app_path('\Shift\Rector\CodeceptionToLaravel\rectorFixNamespaces.php'), $directory);
         echo 'Rector Changes from fixing namespaces: '.$directory.PHP_EOL;
