@@ -42,7 +42,6 @@ Move from example to phpunit attributes
 
 ## RefactorDatabaseCalls
 
-asd
 
 - class: [`App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun\RefactorDatabaseCalls`](RulesFirstRun/RefactorDatabaseCalls.php)
 
@@ -58,7 +57,6 @@ Change access to response body
 
 ## RefactorGrabFromDatabase
 
-Upgrade Monolog method signatures and array usage to object usage
 
 - class: [`App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun\RefactorGrabFromDatabase`](RulesFirstRun/RefactorGrabFromDatabase.php)
 
@@ -101,20 +99,6 @@ Replace json path access to equivalent in Laravel feature tests
 Replace codeception methods to equivalents in Laravel Feature tests
 
 - class: [`App\Shift\Rector\CodeceptionToLaravel\RulesFirstRun\RenameApiTesterMethod`](RulesFirstRun/RenameApiTesterMethod.php)
-
-<br>
-
-<br>
-
-<br>
-
-<br>
-
-<br>
-
-<br>
-
-<br>
 
 <br>
 

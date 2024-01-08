@@ -29,7 +29,7 @@ class ShiftCodeceptionToLaravel extends Command
     public function handle(): void
     {
         echo "I'm starting to shift, SLAYYY!".PHP_EOL;
-        config(['shift.command_name' => 'shift:CodeceptionToPhpUnit']);
+        config(['shift.command_name' => 'shift:CodeceptionToLaravel']);
         (new CodeceptionToLaravelTests)->run(config('shift.project_path'));
         echo "I'm done!!".PHP_EOL;
     }
