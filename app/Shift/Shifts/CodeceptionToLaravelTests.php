@@ -88,7 +88,7 @@ class CodeceptionToLaravelTests implements BaseShift
         $table = '';
         $sqlDump = file_get_contents($directory.'\tests\_data\dump.sql');
 
-        if(!$sqlDump){
+        if (! $sqlDump) {
             echo 'Couldn\'t find a dump.sql at '.$directory.'\tests\_data\'';
 
             return;
@@ -137,10 +137,7 @@ class CodeceptionToLaravelTests implements BaseShift
     }
 
     /**
-     * @param string $table
-     * @param array<mixed> $records
-     * @param string $directory
-     * @return void
+     * @param  array<mixed>  $records
      */
     private function createSeeder(string $table, array $records, string $directory): void
     {
@@ -154,9 +151,7 @@ class CodeceptionToLaravelTests implements BaseShift
     }
 
     /**
-     * @param array<mixed> $records
-     * @param string $table
-     * @return string
+     * @param  array<mixed>  $records
      */
     private function recordsAsArrayString(array $records, string $table): string
     {
@@ -178,9 +173,7 @@ class CodeceptionToLaravelTests implements BaseShift
     }
 
     /**
-     * @param array<mixed> $seeders
-     * @param string $directory
-     * @return void
+     * @param  array<mixed>  $seeders
      */
     private function createTestSeeder(array $seeders, string $directory): void
     {
