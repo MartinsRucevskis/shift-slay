@@ -9,9 +9,9 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
+use function Safe\file_get_contents;
 use Tests\Support\HttpMock\HttpStatelessMock;
 
-use function Safe\file_get_contents;
 
 abstract class TestCase extends BaseTestCase
 {

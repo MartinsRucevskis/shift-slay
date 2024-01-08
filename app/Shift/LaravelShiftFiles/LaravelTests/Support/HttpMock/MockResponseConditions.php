@@ -3,7 +3,6 @@
 namespace Tests\Support\HttpMock;
 
 use Illuminate\Http\Client\Request;
-
 use function Safe\preg_match;
 
 class MockResponseConditions
