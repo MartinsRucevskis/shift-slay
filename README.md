@@ -43,7 +43,7 @@ Commands for launching migrations
 
 - Pull `shift-slay` locally
 - Edit `.env` file
-    -  Set `SHIFT_PROJECT_PATH` to project You want to upgrade
+    -  Set `SHIFT_PROJECT_PATH` to the projects You want to upgrade `../web` path.
 - Launch migration
 
 
