@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Http;
 use function Safe\file_get_contents;
 use Tests\Support\HttpMock\HttpStatelessMock;
 
-
 abstract class TestCase extends BaseTestCase
 {
     use CreatesApplication;
