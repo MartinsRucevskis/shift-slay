@@ -29,8 +29,8 @@ class UpdateProject implements BaseShift
 //            }
 //        }
         $banda = (new BreakingChangeFinder())->findBreakingChanges(
-            '/home/martins/projects/shift-slay/monolog2',
-            '/home/martins/projects/shift-slay/monolog3'
+            __DIR__.'/../../../monolog2',
+            __DIR__.'/../../../monolog3'
         );
     }
 }
